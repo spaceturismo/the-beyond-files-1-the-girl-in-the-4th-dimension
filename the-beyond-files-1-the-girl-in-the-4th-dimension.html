@@ -1,0 +1,2137 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>The Beyond Files 1: The Girl in the 4th Dimension</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@700;800&family=Courier+Prime:ital,wght@0,400;0,700;1,400&family=IBM+Plex+Mono:wght@400;500&family=Reenie+Beanie&display=swap">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/shaders/CopyShader.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/shaders/LuminosityHighPassShader.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/EffectComposer.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/RenderPass.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/ShaderPass.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/UnrealBloomPass.js"></script>
+<style>
+/* Layout: a title bar, one large viewport that holds the whole game, one line of key hints below.
+   Look: a closed 1980s research institute, then a dead small town at 3 a.m. Sodium amber and sick fluorescent light
+   against teal-black night; the fourth dimension is always ultraviolet; paper documents are cream on black. */
+:root {
+  --ink: #05070a; --panel: #0b1014; --fg: #dfe6e4; --muted: #8a9a9a; --amber: #e8a23a; --echo: #c58bff; --alarm: #ff4a3a;
+  --paper: #e6dfc9; --paper-ink: #1d1a14; --edge: rgba(223,230,228,0.18);
+  --display: 'Big Shoulders Display', 'Arial Narrow', Impact, sans-serif;
+  --doc: 'Courier Prime', 'Courier New', monospace;
+  --mono: 'IBM Plex Mono', ui-monospace, Menlo, Consolas, monospace;
+  --hand: 'Reenie Beanie', 'Segoe Print', 'Bradley Hand', cursive;
+  color-scheme: dark;
+}
+html, body { height: 100%; }
+html { background: var(--ink); }
+body {
+  background: var(--ink); color: var(--fg); font-family: var(--mono); font-size: 13px; line-height: 1.5;
+  padding-block: 12px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+.app { height: 100%; max-width: 1280px; margin: 0 auto; display: flex; flex-direction: column; gap: 10px; min-height: 0; }
+.bar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 6px 16px; }
+h1 { margin: 0; font-family: var(--display); font-weight: 800; font-size: clamp(1.5rem, 4vw, 2.1rem); letter-spacing: 0.1em; text-transform: uppercase; line-height: 1; }
+.status { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; font-size: 11.5px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
+.status b { color: var(--fg); font-weight: 500; }
+.mini { min-height: 34px; padding: 6px 12px; font-family: var(--mono); font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--fg); background: transparent; border: 1px solid var(--edge); cursor: pointer; }
+.mini:hover { border-color: var(--amber); color: var(--amber); }
+:focus-visible { outline: 2px solid var(--amber); outline-offset: 3px; }
+
+.stage { position: relative; flex: 1; min-height: 380px; background: #020304; border: 1px solid var(--edge); overflow: hidden; touch-action: none; }
+#gl { position: absolute; inset: 0; width: 100%; height: 100%; display: block; cursor: crosshair; }
+.vignette { position: absolute; inset: 0; pointer-events: none; background: radial-gradient(ellipse at center, rgba(0,0,0,0) 45%, rgba(0,0,0,0.72) 100%); transition: opacity 0.3s; }
+.fear { position: absolute; inset: 0; pointer-events: none; opacity: 0; background: radial-gradient(ellipse at center, rgba(120,0,0,0) 35%, rgba(140,0,0,0.55) 100%); }
+.flash { position: absolute; inset: 0; pointer-events: none; opacity: 0; background: #b00; }
+.slats { position: absolute; inset: 0; pointer-events: none; opacity: 0; transition: opacity 0.2s; background: repeating-linear-gradient(0deg, #000 0 14px, transparent 14px 20px); box-shadow: inset 0 0 120px 40px #000; }
+.slats.on { opacity: 0.93; }
+.grain { position: absolute; inset: 0; pointer-events: none; opacity: 0.07; mix-blend-mode: screen; background-image: repeating-radial-gradient(circle at 17% 32%, #fff 0 0.4px, transparent 0.5px 3px); animation: grain 0.4s steps(3) infinite; }
+@keyframes grain { 0% { transform: translate(0,0); } 33% { transform: translate(-6px,4px); } 66% { transform: translate(5px,-5px); } 100% { transform: translate(0,0); } }
+.dark { position: absolute; inset: 0; pointer-events: none; background: #000; opacity: 0; transition: opacity 0.5s; display: grid; place-items: center; text-align: center; padding: 24px; z-index: 5; }
+.dark.on { opacity: 1; }
+.dark p { margin: 0; max-width: 36ch; font-family: var(--doc); font-size: 16px; }
+.banner { position: absolute; inset: 0; display: grid; place-items: center; pointer-events: none; opacity: 0; transition: opacity 1.2s; z-index: 4; text-align: center; padding: 20px; }
+.banner.on { opacity: 1; }
+.banner div { font-family: var(--display); font-weight: 800; letter-spacing: 0.22em; text-transform: uppercase; font-size: clamp(1.4rem, 5vw, 2.6rem); text-shadow: 0 2px 18px #000; }
+.banner small { display: block; margin-top: 8px; font-family: var(--mono); font-size: 12px; letter-spacing: 0.18em; color: var(--muted); font-weight: 400; }
+
+.hud { position: absolute; inset: 0; pointer-events: none; z-index: 3; }
+.reticle { position: absolute; left: 50%; top: 50%; width: 4px; height: 4px; margin: -2px; border-radius: 50%; background: rgba(223,230,228,0.6); }
+.prompt { position: absolute; left: 50%; top: calc(50% + 36px); transform: translateX(-50%); max-width: 90%; padding: 6px 12px; text-align: center; font-size: 12px; letter-spacing: 0.08em; background: rgba(5,7,10,0.8); border: 1px solid var(--edge); opacity: 0; transition: opacity 0.15s; }
+.prompt.on { opacity: 1; }
+.prompt kbd { font-family: var(--mono); color: var(--amber); }
+.sub { position: absolute; left: 50%; bottom: 96px; transform: translateX(-50%); width: min(580px, 92%); text-align: center; font-family: var(--doc); font-size: 15px; line-height: 1.45; text-shadow: 0 1px 6px #000, 0 0 2px #000; opacity: 0; transition: opacity 0.5s; }
+.sub.on { opacity: 1; }
+.meters { position: absolute; left: 14px; bottom: 14px; display: grid; gap: 6px; width: 180px; font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
+.meter { display: grid; gap: 3px; }
+.meter .row { display: flex; justify-content: space-between; gap: 8px; }
+.meter .row b { font-weight: 500; color: var(--fg); }
+.track { height: 4px; background: rgba(223,230,228,0.12); }
+.fill { height: 100%; width: 0; background: var(--amber); }
+#detFill { background: var(--alarm); } #stamFill { background: #9fd3c7; } #batFill { background: #e8d27a; }
+.objective { position: absolute; right: 14px; top: 12px; max-width: min(320px, 46%); text-align: right; font-size: 11px; line-height: 1.5; letter-spacing: 0.05em; color: var(--muted); text-shadow: 0 1px 4px #000; }
+.bottles { position: absolute; right: 14px; bottom: 14px; font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); text-align: right; }
+.bottles b { color: var(--fg); font-weight: 500; }
+
+.overlay { position: absolute; inset: 0; z-index: 6; display: flex; padding: 16px; overflow: auto; background: rgba(2,3,5,0.78); }
+.card { margin: auto; width: 100%; max-width: 580px; display: grid; gap: 14px; justify-items: start; padding: 26px 28px 24px; background: var(--panel); border: 1px solid var(--edge); }
+.eyebrow { font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--muted); }
+.ctitle { margin: 0; font-family: var(--display); font-weight: 800; font-size: clamp(2.6rem, 9vw, 4.2rem); letter-spacing: 0.08em; text-transform: uppercase; line-height: 0.95; }
+.copy { margin: 0; font-family: var(--doc); font-size: 15.5px; line-height: 1.55; max-width: 54ch; }
+.copy.dim { color: var(--muted); font-size: 13px; }
+.line { margin: 0; font-family: var(--doc); font-size: 15.5px; line-height: 1.55; max-width: 54ch; }
+.line.her { font-family: var(--hand); font-size: 28px; line-height: 1.1; color: #ffe2b0; }
+.line.mood { color: var(--muted); font-style: italic; }
+.btns { display: flex; flex-wrap: wrap; gap: 10px; }
+.btn { min-height: 44px; padding: 11px 18px; font-family: var(--mono); font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--amber); background: transparent; border: 1px solid var(--amber); cursor: pointer; transition: background 0.2s, color 0.2s; }
+.btn:hover { background: var(--amber); color: #1a1004; }
+.btn.quiet { color: var(--muted); border-color: var(--edge); }
+.btn.quiet:hover { background: rgba(223,230,228,0.1); color: var(--fg); }
+.card.paper { background: var(--paper); color: var(--paper-ink); border-color: #bdb49b; box-shadow: 0 18px 60px rgba(0,0,0,0.6); }
+.card.paper .eyebrow { color: #6d6550; }
+.card.paper .ctitle { font-size: clamp(1.5rem, 5vw, 2.1rem); letter-spacing: 0.06em; }
+.card.paper .line { font-size: 14.5px; }
+.card.paper .line.mood { color: #5d5642; }
+.card.paper .line.margin { font-family: var(--hand); font-size: 26px; line-height: 1.05; color: #2c3a8a; transform: rotate(-1.2deg); }
+.card.paper .btn { color: var(--paper-ink); border-color: var(--paper-ink); }
+.card.paper .btn:hover { background: var(--paper-ink); color: var(--paper); }
+.card.kid { background: #efe6c4; }
+.card.kid .line { font-family: var(--hand); font-size: 27px; line-height: 1.12; color: #3a2a6a; max-width: 40ch; }
+.list { display: grid; gap: 8px; width: 100%; }
+.list button { text-align: left; min-height: 44px; padding: 10px 12px; font-family: var(--mono); font-size: 12px; letter-spacing: 0.06em; color: var(--fg); background: transparent; border: 1px solid var(--edge); cursor: pointer; }
+.list button:hover:not(:disabled) { border-color: var(--amber); color: var(--amber); }
+.list button:disabled { color: var(--muted); cursor: default; }
+.keys { margin: 0; font-size: 11px; letter-spacing: 0.06em; color: var(--muted); }
+.keys kbd { font-family: var(--mono); color: var(--fg); }
+
+.touch { display: none; position: absolute; inset: 0; z-index: 4; pointer-events: none; }
+.stick { position: absolute; left: 14px; bottom: 14px; width: 132px; height: 132px; border: 1px solid var(--edge); border-radius: 50%; background: rgba(5,7,10,0.35); pointer-events: auto; touch-action: none; }
+.knob { position: absolute; left: 50%; top: 50%; width: 52px; height: 52px; margin: -26px; border-radius: 50%; background: rgba(223,230,228,0.16); border: 1px solid var(--fg); }
+.lookpad { position: absolute; right: 0; top: 0; width: 52%; bottom: 170px; pointer-events: auto; touch-action: none; }
+.tbtns { position: absolute; right: 14px; bottom: 14px; display: grid; grid-template-columns: repeat(3, 56px); gap: 8px; pointer-events: auto; }
+.tbtns button { min-height: 50px; font-family: var(--mono); font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--fg); background: rgba(5,7,10,0.55); border: 1px solid var(--edge); touch-action: none; }
+.tbtns button.act { border-color: var(--amber); color: var(--amber); }
+@media (pointer: coarse) { .touch { display: block; } .keys { display: none; } .meters { left: auto; right: 14px; bottom: auto; top: 64px; width: 140px; } .objective, .bottles { display: none; } }
+@media (max-width: 640px) {
+  .overlay { position: fixed; background: rgba(2,3,5,0.95); padding-block: max(16px, env(safe-area-inset-top, 0px)) max(16px, env(safe-area-inset-bottom, 0px)); padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+  .card { padding: 20px 18px; } .meters { width: 140px; } .objective, .bottles { display: none; }
+}
+@media (prefers-reduced-motion: reduce) { .prompt, .sub, .dark, .banner, .slats { transition: none; } .grain { animation: none; } }
+</style>
+
+<div class="app">
+  <header class="bar">
+    <h1>Hall Four</h1>
+    <div class="status">
+      <span>Pages <b id="count">0 / 11</b></span>
+      <button class="mini" id="caseBtn" type="button">Case file</button>
+      <button class="mini" id="pauseBtn" type="button">Pause</button>
+    </div>
+  </header>
+
+  <section class="stage" id="stage" aria-label="First-person view">
+    <canvas id="gl" tabindex="0" aria-label="First-person view of the Meridian Institute and the town of Meridian at night"></canvas>
+    <div class="vignette" id="vig"></div>
+    <div class="fear" id="fear"></div>
+    <div class="slats" id="slats"></div>
+    <div class="grain"></div>
+    <div class="flash" id="flash"></div>
+
+    <div class="hud" id="hud">
+      <div class="reticle"></div>
+      <div class="prompt" id="prompt"></div>
+      <div class="sub" id="sub" role="status" aria-live="polite"></div>
+      <div class="objective" id="objective"></div>
+      <div class="meters">
+        <div class="meter"><div class="row"><span>Noticed</span><b id="detTxt">Unseen</b></div><div class="track"><div class="fill" id="detFill"></div></div></div>
+        <div class="meter"><div class="row"><span>Light</span><b id="lightTxt">Hidden</b></div><div class="track"><div class="fill" id="lightFill"></div></div></div>
+        <div class="meter"><div class="row"><span>Stamina</span><b id="stanceTxt">Standing</b></div><div class="track"><div class="fill" id="stamFill" style="width:100%"></div></div></div>
+        <div class="meter"><div class="row"><span>Battery</span><b id="batTxt">On</b></div><div class="track"><div class="fill" id="batFill" style="width:100%"></div></div></div>
+      </div>
+      <div class="bottles">Bottles <b id="bottleTxt">0</b></div>
+    </div>
+
+    <div class="touch" id="touch">
+      <div class="lookpad" id="lookpad"></div>
+      <div class="stick" id="stick"><div class="knob" id="knob"></div></div>
+      <div class="tbtns">
+        <button type="button" id="tE">Use</button>
+        <button type="button" id="tC">Crouch</button>
+        <button type="button" id="tF">Light</button>
+        <button type="button" id="tG">Throw</button>
+        <button type="button" id="tB">Breath</button>
+      </div>
+    </div>
+
+    <div class="banner" id="banner"><div id="bannerTxt"></div></div>
+    <div class="dark" id="dark"><p id="darkTxt"></p></div>
+    <div class="overlay" id="overlay" hidden><div class="card" id="card" role="dialog" aria-modal="true"></div></div>
+  </section>
+
+  <p class="keys" id="hint"></p>
+</div>
+<script>(()=>{'use strict';let PART=1,SLOT=1;
+/* ================= world data (pure, no 3D calls) ================= */
+const CS = 4, MW = 110, MH = 112, WALL_H = 4.4, HOUSE_H = 6.6;
+const OX = 4, OY = 70, OFFX = OX * CS, OFFZ = OY * CS;       // the Institute sits inside the town grid at this offset
+const grid = Array.from({ length: MH }, () => Array(MW).fill(','));
+const floors = [], roofs = [], doors = [], doorAt = {}, props = [], lightSrc = [], pickups = [], lanterns = [], clues = [], patrols = [], roads = [], windows = [], poiList = [];
+let seed = 90210;
+const rnd = () => { seed |= 0; seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; };
+const wc = c => (c + 0.5) * CS;                              // cell index -> world centre
+
+function fill(x, y, w, h, c) { for (let j = y; j < y + h; j++) for (let i = x; i < x + w; i++) if (i >= 0 && j >= 0 && i < MW && j < MH) grid[j][i] = c; }
+function carve(x, y, w, h) { fill(x, y, w, h, '.'); floors.push([x, y, w, h]); }
+function addDoor(cells, axis, o) {
+  const d = Object.assign({ cells, axis, open: false, locked: false, anim: 0 }, o || {});
+  d.x = cells.reduce((s, c) => s + wc(c[0]), 0) / cells.length; d.z = cells.reduce((s, c) => s + wc(c[1]), 0) / cells.length;
+  doors.push(d); cells.forEach(c => { grid[c[1]][c[0]] = 'D'; doorAt[c[0] + ',' + c[1]] = d; }); return d;
+}
+function addProp(x, z, w, d, h, color, extra) {
+  const p = Object.assign({ x, z, w, d, h, color, x0: x - w / 2, x1: x + w / 2, z0: z - d / 2, z1: z + d / 2, tall: h >= 1.8 }, extra || {});
+  props.push(p); return p;
+}
+const pc = (cx, cz, w, d, h, color, extra) => addProp(cx * CS, cz * CS, w, d, h, color, extra);   // prop placed in cell coordinates
+const locker = (x, z, type) => ({ hide: true, type: type || 'locker', tall: true });
+function building(x, y, w, h, hy, color) { fill(x, y, w, h, '#'); roofs.push({ x, y, w, h, hy, color }); }
+function light(x, y, z, color, int, dist, r, i, flick) { lightSrc.push({ x, y, z, color, int, dist, r, i, flick: !!flick }); }
+function lantern(cx, cz, name) { lanterns.push({ x: cx * CS, z: cz * CS, name }); }
+
+/* ---------- the Institute (tutorial) ---------- */
+const IDOORS = {};
+function buildInstitute() {
+  fill(OX, OY, 40, 30, '#'); roofs.push({ x: OX, y: OY, w: 40, h: 30, hy: WALL_H, color: 0x14181b });
+  [[2, 22, 8, 6], [4, 19, 2, 3], [2, 12, 7, 7], [4, 10, 2, 2], [2, 3, 9, 7], [11, 5, 6, 2], [17, 2, 12, 7], [21, 9, 2, 1], [14, 10, 12, 10], [9, 14, 5, 2],
+   [26, 14, 4, 2], [30, 12, 8, 8], [19, 20, 2, 2], [14, 22, 14, 6], [10, 24, 4, 2], [29, 5, 3, 2], [32, 2, 6, 7], [34, 9, 2, 3]].forEach(r => carve(OX + r[0], OY + r[1], r[2], r[3]));
+  IDOORS.sealed = addDoor([[OX + 30, OY + 5], [OX + 30, OY + 6]], 'z', { locked: true, tag: 'sealed' });
+  IDOORS.dock = addDoor([[OX + 24, OY + 28], [OX + 25, OY + 28]], 'x', { locked: true, tag: 'dock' });
+  fill(OX + 24, OY + 29, 2, 1, ',');
+  // props, shifted into the town grid
+  [[28, 106, 8, 2.2, 1.1, 0x4a3a2e], [31, 71, 5, 2.5, 1.0, 0x4a3a2e], [12, 51.5, 12, 2, 2.3, 0x56606a], [14, 59, 2, 10, 2.3, 0x56606a], [30, 59, 2, 10, 2.3, 0x56606a],
+   [20, 22, 14, 3, 1.0, 0x5d6a70], [20, 32, 14, 3, 1.0, 0x5d6a70], [34, 27, 3, 12, 1.0, 0x5d6a70], [12, 16, 4, 6, 2.3, 0x56606a],
+   [92, 12, 28, 3, 1.1, 0x39454b], [92, 24, 10, 4, 1.0, 0x39454b], [70, 22, 2.4, 14, 2.6, 0x2a3236], [80, 60, 6, 6, 1.0, 0x3a3358],
+   [66, 50, 2, 2, 4.2, 0x3b434a], [94, 50, 2, 2, 4.2, 0x3b434a], [66, 70, 2, 2, 4.2, 0x3b434a], [94, 70, 2, 2, 4.2, 0x3b434a],
+   [126, 54, 6, 3, 0.6, 0x6a5a4a], [126, 74, 6, 3, 0.6, 0x6a5a4a], [142, 64, 6, 4, 0.8, 0x7a6a4a],
+   [66, 100, 6, 6, 3.6, 0x6b3a30], [78, 100, 6, 6, 3.6, 0x6b3a30], [90, 100, 6, 6, 3.6, 0x6b3a30], [104, 92, 8, 3, 1.0, 0x4a4036]
+  ].forEach(p => addProp(p[0] + OFFX, p[1] + OFFZ, p[2], p[3], p[4], p[5]));
+  // lockers: the first places you learn to hide
+  [[12, 92], [10, 74], [58, 52], [58, 76], [114, 10], [10, 38], [58, 110], [110, 108], [150, 34], [150, 70]].forEach(l => addProp(l[0] + OFFX, l[1] + OFFZ, 1.3, 1.3, 2.2, 0x3d5560, locker()));
+  // the seven pages
+  [[28, 106, 1.55], [31, 71, 1.45], [34, 31, 1.5], [84, 12, 1.6], [142, 64, 1.35], [104, 92, 1.5], [80, 59, 1.55]].forEach((c, i) => clues.push({ id: i, x: c[0] + OFFX, z: c[1] + OFFZ, y: c[2], zone: 'inst' }));
+  [[28, 3.4, 104, 0xffb25a, 1.0, 30, 15, 0.9, false], [24, 3.4, 64, 0xe8f2e0, 0.9, 30, 14, 0.8, false], [26, 3.4, 26, 0xa8e8ff, 1.0, 34, 17, 0.85, true],
+   [92, 3.4, 22, 0x8affc8, 0.9, 38, 19, 0.8, false], [80, 4.4, 60, 0xb990ff, 1.25, 48, 22, 0.95, false], [140, 2.8, 64, 0xffc98a, 0.85, 28, 13, 0.5, false],
+   [84, 3.4, 100, 0xff6a4a, 0.95, 38, 18, 0.55, true], [140, 4.2, 22, 0xd8c8ff, 1.3, 38, 17, 0.9, false]
+  ].forEach(l => light(l[0] + OFFX, l[1], l[2] + OFFZ, l[3], l[4], l[5], l[6], l[7], l[8]));
+  [[[62, 46], [98, 46], [98, 74], [62, 74]], [[14, 36], [40, 36], [40, 17], [16, 17]], [[76, 31], [110, 31], [110, 16], [76, 16]], [[60, 93], [96, 93], [96, 108], [60, 108]]]
+    .forEach(p => patrols.push({ zone: 'inst', pp: false, path: p.map(q => [q[0] + OFFX, q[1] + OFFZ]) }));
+  patrols.push({ zone: 'inst', pp: true, path: [[22, 72], [22, 60], [44, 60]].map(q => [q[0] + OFFX, q[1] + OFFZ]) });
+  [[14, 100], [20, 88], [60, 74], [100, 98]].forEach(b => pickups.push({ x: b[0] + OFFX, z: b[1] + OFFZ, type: b[0] > 50 ? 'battery' : 'bottle' }));
+  lantern(OX + 24.5, OY + 31, 'the loading dock');
+}
+
+/* ---------- the town ---------- */
+const houseRects = [], oathHouses = [];
+function house(x, y, w, h) {
+  houseRects.push({ x, y, w, h });
+  fill(x, y, w, h, 'B');
+  roofs.push({ x, y, w, h, hy: HOUSE_H, color: [0x2a2420, 0x24282c, 0x2c2622][Math.floor(rnd() * 3)] });
+  if (rnd() < 0.45) windows.push({ x: (x + 1.5 + rnd() * (w - 3)) * CS, y: 2.7, z: (y + h) * CS + 0.04 });
+}
+function yard(x, y) { fill(x, y + 1, 3, 1, 'h'); }
+function lotBlock(bx, by, bw, ys) {
+  for (const y of ys) for (let x = bx + 3; x + 8 <= bx + bw; x += 12) {
+    if (rnd() < 0.62) house(x, y, 8, 7); else yard(x, y);
+    if (rnd() < 0.55) pc(x + 4, y + 7.9, 3, 1.6, 1.7, 0x2f5a3a, { hide: true, type: 'dumpster', tall: true });
+  }
+}
+function buildChurch() {
+  building(52, 22, 18, 15, WALL_H, 0x1c2024);
+  carve(58, 24, 11, 10); carve(54, 25, 3, 6); carve(60, 34, 3, 2);
+  addDoor([[60, 36], [61, 36], [62, 36]], 'x', { tag: 'church-front' });
+  addDoor([[57, 27]], 'z', { tag: 'church-vestry' });
+  addDoor([[69, 28], [69, 29]], 'z', { tag: 'church-side' });
+  [26.5, 28.5, 30.5].forEach(y => { pc(60.8, y, 10, 2.2, 0.95, 0x4a3426); pc(66.0, y, 10, 2.2, 0.95, 0x4a3426); });
+  pc(63, 24.8, 4, 2.4, 1.3, 0x5a4636);
+  pc(67.9, 25.4, 2.2, 2.6, 2.6, 0x3a2a20, { hide: true, type: 'confessional', tall: true });
+  pc(55.2, 26.2, 2.2, 1.4, 2.3, 0x4a3a2e, { hide: true, type: 'wardrobe', tall: true });
+  clues.push({ id: 7, x: 63 * CS, z: 24.9 * CS, y: 1.5, zone: 'church' });
+  light(63 * CS, 3.4, 29 * CS, 0xffd9a0, 0.7, 26, 13, 0.45, true);
+  lantern(61.5, 38.4, 'the church');
+  poiList.push({ id: 'church', spawns: [[61, 35.2], [62, 35.2]], exit: [70.5, 28.5], inside: [52, 22, 18, 15] });
+  pickups.push({ x: 56 * CS, z: 29 * CS, type: 'battery' }, { x: 66 * CS, z: 33 * CS, type: 'bottle' });
+}
+function buildSchool() {
+  building(80, 20, 17, 17, WALL_H, 0x24282a);
+  carve(81, 27, 15, 3); carve(82, 22, 5, 4); carve(89, 22, 5, 4); carve(82, 31, 5, 4); carve(89, 31, 5, 4);
+  addDoor([[80, 27], [80, 28], [80, 29]], 'z', { tag: 'school-front' });
+  addDoor([[96, 27], [96, 28], [96, 29]], 'z', { tag: 'school-back' });
+  [[84, 26], [91, 26], [84, 30], [91, 30]].forEach(c => addDoor([c], 'x', { tag: 'classroom' }));
+  [[85.5, 27.3], [90.5, 27.3], [87.5, 29.7], [92.5, 29.7]].forEach(l => pc(l[0], l[1], 1.3, 1.3, 2.2, 0x3d5560, locker()));
+  pc(91, 23.2, 6, 2.5, 0.9, 0x5a4a38); pc(82.9, 33.6, 2.2, 1.4, 2.3, 0x4a3a2e, { hide: true, type: 'wardrobe', tall: true });
+  clues.push({ id: 8, x: 91 * CS, z: 23.2 * CS, y: 1.35, zone: 'school' });
+  light(88 * CS, 3.4, 28 * CS, 0xcfe8d0, 0.8, 28, 14, 0.5, true);
+  lantern(78.5, 28.5, 'the school');
+  poiList.push({ id: 'school', spawns: [[81.5, 28.5], [81.5, 27.7]], exit: [98.5, 28.5], inside: [80, 20, 17, 17] });
+  pickups.push({ x: 83 * CS, z: 23 * CS, type: 'bottle' }, { x: 92 * CS, z: 33 * CS, type: 'battery' });
+}
+function buildDiner() {
+  building(50, 45, 16, 11, WALL_H, 0x2a2622);
+  carve(51, 46, 14, 6); carve(51, 53, 8, 2); carve(60, 53, 5, 2);
+  addDoor([[56, 45], [57, 45]], 'x', { tag: 'diner-front' });
+  addDoor([[54, 52]], 'x', { tag: 'diner-kitchen' }); addDoor([[62, 52]], 'x', { tag: 'diner-office' });
+  addDoor([[65, 48], [65, 49]], 'z', { tag: 'diner-side' });
+  [52.5, 60.5, 63.0].forEach(x => pc(x, 47.3, 6, 2.6, 0.95, 0x6a2a2a));
+  pc(57.5, 50.4, 20, 2.4, 1.1, 0x5a4a38);
+  pc(51.9, 53.7, 2.6, 2.8, 2.4, 0x8a9aa0, { hide: true, type: 'fridge', tall: true });
+  pc(63.6, 54.0, 2.2, 1.6, 2.3, 0x4a3a2e, { hide: true, type: 'wardrobe', tall: true });
+  [[69, 47.5], [71, 47.5], [69, 50], [71, 50]].forEach(p => pc(p[0], p[1], 1.3, 1.3, 2.2, 0x7a2a2a));
+  clues.push({ id: 9, x: 60.5 * CS, z: 47.1 * CS, y: 1.3, zone: 'diner' });
+  light(58 * CS, 3.4, 49 * CS, 0xffe0a0, 0.8, 28, 15, 0.55, true); light(55 * CS, 3.2, 54 * CS, 0xb0e0ff, 0.6, 18, 8, 0.4, true);
+  lantern(58.5, 43.4, 'the diner');
+  poiList.push({ id: 'diner', spawns: [[56.5, 46.5], [57.5, 46.5]], exit: [66.8, 48.5], inside: [50, 45, 16, 11] });
+  pickups.push({ x: 53 * CS, z: 54 * CS, type: 'battery' }, { x: 62 * CS, z: 50 * CS, type: 'bottle' });
+}
+function buildClinic() {
+  building(80, 46, 17, 17, WALL_H, 0x262a2c);
+  carve(81, 53, 15, 3); carve(82, 47, 6, 5); carve(90, 47, 6, 5); carve(82, 57, 6, 4); carve(90, 57, 6, 4);
+  addDoor([[80, 53], [80, 54], [80, 55]], 'z', { tag: 'clinic-front' });
+  addDoor([[96, 53], [96, 54], [96, 55]], 'z', { tag: 'clinic-back' });
+  [[84, 52], [92, 52], [84, 56], [92, 56]].forEach(c => addDoor([c], 'x', { tag: 'ward' }));
+  pc(82.8, 48.4, 2.2, 1.4, 2.3, 0x6a7a80, { hide: true, type: 'closet', tall: true }); pc(94.8, 58.6, 2.2, 1.4, 2.3, 0x6a7a80, { hide: true, type: 'closet', tall: true });
+  pc(86, 59, 7, 2.6, 0.8, 0x7a8a90); pc(92, 48.6, 6, 2.5, 1.0, 0x5a6a70);
+  clues.push({ id: 10, x: 92 * CS, z: 48.4 * CS, y: 1.4, zone: 'clinic' });
+  light(88 * CS, 3.4, 54 * CS, 0xd5ffe8, 0.85, 30, 16, 0.5, true); light(92 * CS, 3.2, 49 * CS, 0xc8e0ff, 0.5, 18, 8, 0.35, true);
+  lantern(78.4, 54.5, 'the clinic');
+  poiList.push({ id: 'clinic', spawns: [[81.5, 54.5], [81.5, 53.6]], exit: [98.5, 54.5], inside: [80, 46, 17, 17] });
+  pickups.push({ x: 85 * CS, z: 50 * CS, type: 'bottle' }, { x: 91.5 * CS, z: 59 * CS, type: 'battery' });
+}
+const TOWER = { x: 88 * CS, z: 84 * CS };
+function buildTower() {
+  fill(86, 82, 4, 4, 'B');
+  for (let i = 79; i <= 97; i++) { grid[71][i] = 'h'; grid[99][i] = 'h'; }
+  for (let j = 71; j <= 99; j++) { grid[j][79] = 'h'; grid[j][97] = 'h'; }
+  IDOORS.gate = addDoor([[79, 83], [79, 84]], 'z', { locked: true, tag: 'tower-gate' });
+  [[82, 76, 6, 1], [90, 76, 6, 1], [82, 92, 6, 1], [90, 92, 6, 1], [82, 77, 1, 3], [95, 77, 1, 3], [82, 89, 1, 3], [95, 89, 1, 3]].forEach(r => fill(r[0], r[1], r[2], r[3], 'h'));
+  lantern(77.8, 85.6, 'the tower gate');
+  pickups.push({ x: 84 * CS, z: 80 * CS, type: 'battery' }, { x: 92 * CS, z: 90 * CS, type: 'bottle' });
+}
+function buildTown() {
+  fill(0, 0, MW, 11, 'T'); fill(103, 0, 7, MH, 'T'); fill(0, 104, MW, 8, 'T'); fill(0, 0, 2, MH, 'T');
+  [[2, 12, 101, 3], [2, 40, 101, 3], [2, 101, 101, 3], [45, 15, 3, 86], [75, 15, 3, 86], [99, 15, 3, 86]].forEach(r => roads.push(r));
+  lotBlock(0, 15, 45, [17, 29]); lotBlock(0, 43, 45, [45, 57]); lotBlock(48, 70, 27, [72, 84]);
+  buildChurch(); buildSchool(); buildDiner(); buildClinic(); buildTower();
+  // trees and hedges for cover between the points of interest
+  [[48, 17, 3, 1], [68, 58, 4, 1], [78, 64, 8, 1], [60, 91, 5, 1]].forEach(r => fill(r[0], r[1], r[2], r[3], 'h'));
+  // streetlamps, cars, bottles
+  const lampPos = [];
+  roads.forEach(r => {
+    if (r[2] > r[3]) for (let x = r[0] + 4; x < r[0] + r[2]; x += 9) lampPos.push([x * CS, (r[1] + (Math.floor(x / 9) % 2 ? 0.4 : 2.6)) * CS]);
+    else for (let z = r[1] + 4; z < r[1] + r[3]; z += 9) lampPos.push([(r[0] + (Math.floor(z / 9) % 2 ? 0.4 : 2.6)) * CS, z * CS]);
+  });
+  lampPos.forEach(l => {
+    const t = rnd(), broken = t < 0.22, flick = !broken && t < 0.4;
+    light(l[0], 5.4, l[1], 0xffc070, broken ? 0 : 1.3, 32, broken ? 0 : 17, broken ? 0 : 0.8, flick); lightSrc[lightSrc.length - 1].lamp = true; lightSrc[lightSrc.length - 1].broken = broken;
+  });
+  // street cover: dumpsters and booths along the roads, so you can choose where to hide
+  roads.forEach(r => { for (let k = 0; k < 4; k++) { const horiz = r[2] > r[3], t = (k + 0.5 + rnd() * 0.5) / 4; const x = horiz ? (r[0] + 6 + t * (r[2] - 12)) * CS : (r[0] + 2.1) * CS, z = horiz ? (r[1] + 2.1) * CS : (r[1] + 6 + t * (r[3] - 12)) * CS; if (Math.hypot(x - 116, z - 404) > 24) addProp(x, z, horiz ? 3 : 1.6, horiz ? 1.6 : 3, 1.7, 0x2f5a3a, { hide: true, type: 'dumpster', tall: true }); } });
+  roads.forEach(r => { for (let k = 0; k < 4; k++) { const horiz = r[2] > r[3], t = rnd(); const x = horiz ? (r[0] + 6 + t * (r[2] - 12)) * CS : (r[0] + 0.9) * CS, z = horiz ? (r[1] + 0.9) * CS : (r[1] + 6 + t * (r[3] - 12)) * CS; if (Math.hypot(x - 116, z - 404) > 16) addProp(x, z, horiz ? 4.4 : 2, horiz ? 2 : 4.4, 1.9, [0x2a3a4a, 0x4a2a2a, 0x3a3a2a, 0x2a2a2a][k], { car: true, tall: true }); } });
+  for (let k = 0; k < 14; k++) { const cx = 4 + Math.floor(rnd() * 98), cz = 16 + Math.floor(rnd() * 84); if (grid[cz][cx] === ',') pickups.push({ x: wc(cx), z: wc(cz), type: k % 3 === 0 ? 'battery' : 'bottle' }); }
+  // street patrols (world coords); more of them than you would like
+  const h = c => wc(c);
+  [[[6, 41], [43, 41], [70, 41], [98, 41]], [[6, 102], [60, 102], [96, 102]], [[46, 16], [46, 60], [46, 99]], [[76, 16], [76, 60], [76, 99]], [[100, 16], [100, 60], [100, 99]],
+   [[5, 13], [48, 13], [96, 13]], [[4, 26], [42, 26]], [[4, 54], [42, 54]], [[50, 81], [73, 81]]]
+    .forEach(p => patrols.push({ zone: 'town', pp: true, path: p.map(q => [h(q[0]), h(q[1])]) }));
+  patrols.push({ zone: 'town', pp: false, path: [[46, 20], [46, 38], [76, 38], [76, 20]].map(q => [h(q[0]), h(q[1])]) });
+  patrols.push({ zone: 'town', pp: false, path: [[46, 44], [46, 68], [76, 68], [76, 44]].map(q => [h(q[0]), h(q[1])]) });
+  // extra sentries, spread over the quiet corners of town
+  [[[60, 14], [100, 14], [100, 40]], [[47, 42], [47, 70], [77, 70]], [[77, 101], [100, 101], [100, 75]], [[101, 15], [101, 42], [78, 42]], [[46, 90], [46, 102], [70, 102]], [[100, 60], [100, 99], [78, 99]], [[20, 14], [44, 14], [44, 40]]]
+    .forEach((p, i) => patrols.push({ zone: 'town', pp: i % 2 === 0, path: p.map(q => [h(q[0]), h(q[1])]) }));
+}
+buildInstitute(); buildTown();
+const CREEK = { x0: 72, x1: 73, z0: 16, z1: 99, bridges: [[40, 42], [70, 71], [90, 91]] };
+for (let j = CREEK.z0; j <= CREEK.z1; j++) for (let i = CREEK.x0; i <= CREEK.x1; i++) if (grid[j][i] === ',' && !CREEK.bridges.some(b => j >= b[0] && j <= b[1])) grid[j][i] = 'w';
+  // the Houses of the Oath: five enterable houses, each keeping one flame
+{ const NM = ['Pell', 'Hendry', 'Marsh', 'Orme', 'Tolliver'], open = (i, j) => i >= 0 && j >= 0 && i < MW && j < MH && grid[j][i] === ',';
+    const free = (r, row) => open(r.x + 3, row) && open(r.x + 4, row) && !props.some(p => p.x1 > (r.x + 2) * CS && p.x0 < (r.x + 6) * CS && p.z1 > (row - 1) * CS && p.z0 < (row + 2) * CS);
+    const sideOf = r => free(r, r.y + r.h) ? 'S' : free(r, r.y - 1) ? 'N' : null;
+    const seen = new Set(), q = [[9, 96]]; seen.add('9,96');
+    while (q.length) { const [i, j] = q.pop(); [[1, 0], [-1, 0], [0, 1], [0, -1]].forEach(d => { const a = i + d[0], b = j + d[1], k = a + ',' + b; if (a < 0 || b < 0 || a >= MW || b >= MH || seen.has(k)) return; const c = grid[b][a]; if (c === '#' || c === 'B' || c === 'T' || c === 'h' || c === 'w') return; seen.add(k); q.push([a, b]); }); }
+    const reach = r => { const dy = sideOf(r) === 'S' ? r.y + r.h : r.y - 1; return seen.has((r.x + 3) + ',' + dy) && seen.has((r.x + 4) + ',' + dy); };
+    const cand = houseRects.filter(r => sideOf(r) && reach(r)), chosen = [];
+    while (chosen.length < 5 && cand.length) {
+      let best = null, bd = -1;
+      cand.forEach(r => { const d = Math.min(...[[61, 30], [78, 28], [58, 46], [78, 54], [78, 86], [24, 100]].concat(chosen.map(c => [c.x, c.y])).map(p => Math.hypot(r.x - p[0], r.y - p[1]))); if (d > bd) { bd = d; best = r; } });
+      chosen.push(best); cand.splice(cand.indexOf(best), 1);
+    }
+    chosen.forEach((r, k) => {
+      const side = sideOf(r), dy = side === 'S' ? r.y + r.h - 1 : r.y;
+      carve(r.x + 1, r.y + 1, r.w - 2, r.h - 2);
+      const d = addDoor([[r.x + 3, dy], [r.x + 4, dy]], 'x', { tag: 'oath' });
+      pc(r.x + 1.9, r.y + 1.9, 2.2, 1.4, 2.3, 0x4a3a2e, { hide: true, type: 'wardrobe', tall: true });
+      pc(r.x + r.w - 2.4, r.y + r.h - 2.4, 2.6, 1.2, 0.9, 0x3b2a22);
+      light(wc(r.x + 4), 2.6, wc(r.y + 3), 0xffb060, 0.9, 24, 12, 0.55, true);
+      oathHouses.push({ name: NM[k], x: wc(r.x + 4), z: wc(r.y + 3), cx: r.x + 4, cz: r.y + 3 });
+    });
+  }
+const hideProps = props.filter(p => p.hide);
+const START = { x: 20 + OFFX, z: 104 + OFFZ, yaw: 0 };
+const propCells = {};
+props.forEach(p => { for (let j = Math.floor(p.z0 / CS); j <= Math.floor(p.z1 / CS); j++) for (let i = Math.floor(p.x0 / CS); i <= Math.floor(p.x1 / CS); i++) (propCells[i + ',' + j] = propCells[i + ',' + j] || []).push(p); });
+/* ================= collision, sight and pathfinding (pure) ================= */
+let JUMPY = 0;
+const cellOf = v => Math.floor(v / CS);
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const angDiff = (a, b) => { let d = a - b; while (d > Math.PI) d -= 2 * Math.PI; while (d < -Math.PI) d += 2 * Math.PI; return d; };
+function solidCell(cx, cz) {
+  if (cx < 0 || cz < 0 || cx >= MW || cz >= MH) return true;
+  const c = grid[cz][cx];
+  if (c === 'D') return !doorAt[cx + ',' + cz].open;
+  return c === '#' || c === 'B' || c === 'T' || c === 'h' || c === 'w';
+}
+function aiSolidCell(cx, cz) {
+  if (cx < 0 || cz < 0 || cx >= MW || cz >= MH) return true;
+  const c = grid[cz][cx];
+  if (c === 'D') return doorAt[cx + ',' + cz].locked;
+  return c === '#' || c === 'B' || c === 'T' || c === 'h' || c === 'w';
+}
+function circRect(cx, cz, r, x0, x1, z0, z1) {
+  const nx = Math.max(x0, Math.min(cx, x1)), nz = Math.max(z0, Math.min(cz, z1)), dx = cx - nx, dz = cz - nz;
+  return dx * dx + dz * dz < r * r;
+}
+function blockedGen(x, z, r, cellFn) {
+  const a = cellOf(x - r), b = cellOf(x + r), c = cellOf(z - r), d = cellOf(z + r);
+  for (let j = c; j <= d; j++) for (let i = a; i <= b; i++) {
+    if (cellFn(i, j) && circRect(x, z, r, i * CS, (i + 1) * CS, j * CS, (j + 1) * CS)) return true;
+    const l = propCells[i + ',' + j];
+    if (l) for (let k = 0; k < l.length; k++) { const p = l[k]; if (JUMPY > 0.5 && p.h <= JUMPY + 0.45) continue; if (circRect(x, z, r, p.x0, p.x1, p.z0, p.z1)) return true; }
+  }
+  return false;
+}
+const blocked = (x, z, r) => blockedGen(x, z, r, solidCell);
+const aiBlocked = (x, z, r) => blockedGen(x, z, r, aiSolidCell);
+function los(x0, z0, x1, z1) {
+  const dx = x1 - x0, dz = z1 - z0, d = Math.hypot(dx, dz), n = Math.max(1, Math.ceil(d / 0.6));
+  for (let i = 1; i < n; i++) {
+    const x = x0 + dx * i / n, z = z0 + dz * i / n, ci = cellOf(x), cj = cellOf(z);
+    if (solidCell(ci, cj)) return false;
+    const l = propCells[ci + ',' + cj];
+    if (l) for (let k = 0; k < l.length; k++) { const p = l[k]; if (p.tall && x > p.x0 && x < p.x1 && z > p.z0 && z < p.z1) return false; }
+  }
+  return true;
+}
+// cells whose centre a prop sits on are closed to pathfinding, so searchers walk around furniture
+const propBlockCell = new Uint8Array(MW * MH);
+props.forEach(p => { for (let j = cellOf(p.z0) - 1; j <= cellOf(p.z1) + 1; j++) for (let i = cellOf(p.x0) - 1; i <= cellOf(p.x1) + 1; i++) { if (i < 0 || j < 0 || i >= MW || j >= MH) continue; if (circRect(wc(i), wc(j), 1.1, p.x0, p.x1, p.z0, p.z1)) propBlockCell[j * MW + i] = 1; } });
+const aiClosed = (i, j) => aiSolidCell(i, j) || propBlockCell[j * MW + i] === 1;
+
+function nearestCell(cx, cz) {
+  for (let r = 0; r < 12; r++) for (let j = cz - r; j <= cz + r; j++) for (let i = cx - r; i <= cx + r; i++) { if (Math.max(Math.abs(i - cx), Math.abs(j - cz)) !== r) continue; if (!aiClosed(i, j)) return [i, j]; }
+  return null;
+}
+const NN = MW * MH, gS = new Float32Array(NN), came = new Int32Array(NN), seen = new Int32Array(NN), done = new Int32Array(NN);
+let stamp = 0;
+const hI = [], hF = [];
+function hpush(i, f) { let k = hI.length; hI.push(i); hF.push(f); while (k > 0) { const p = (k - 1) >> 1; if (hF[p] <= hF[k]) break; [hF[p], hF[k]] = [hF[k], hF[p]]; [hI[p], hI[k]] = [hI[k], hI[p]]; k = p; } }
+function hpop() {
+  const top = hI[0], li = hI.pop(), lf = hF.pop();
+  if (hI.length) { hI[0] = li; hF[0] = lf; let k = 0; for (;;) { let l = 2 * k + 1, r = l + 1, m = k; if (l < hI.length && hF[l] < hF[m]) m = l; if (r < hI.length && hF[r] < hF[m]) m = r; if (m === k) break; [hF[m], hF[k]] = [hF[k], hF[m]]; [hI[m], hI[k]] = [hI[k], hI[m]]; k = m; } }
+  return top;
+}
+const DIRS = [[1, 0, 1], [-1, 0, 1], [0, 1, 1], [0, -1, 1], [1, 1, 1.414], [1, -1, 1.414], [-1, 1, 1.414], [-1, -1, 1.414]];
+function astarCells(sx, sz, tx, tz) {
+  let s = [cellOf(sx), cellOf(sz)], t = [cellOf(tx), cellOf(tz)];
+  if (aiClosed(s[0], s[1])) s = nearestCell(s[0], s[1]); if (aiClosed(t[0], t[1])) t = nearestCell(t[0], t[1]);
+  if (!s || !t) return null;
+  stamp++; hI.length = 0; hF.length = 0;
+  const si = s[1] * MW + s[0], ti = t[1] * MW + t[0];
+  gS[si] = 0; seen[si] = stamp; came[si] = -1; hpush(si, 0);
+  let nodes = 0;
+  while (hI.length && nodes++ < 9000) {
+    const cur = hpop(); if (done[cur] === stamp) continue; done[cur] = stamp;
+    if (cur === ti) { const out = []; for (let k = cur; k !== -1 && k !== si; k = came[k]) out.push([k % MW, (k / MW) | 0]); return out.reverse(); }
+    const cx = cur % MW, cz = (cur / MW) | 0;
+    for (const d of DIRS) {
+      const nx = cx + d[0], nz = cz + d[1];
+      if (aiClosed(nx, nz)) continue;
+      if (d[0] && d[1] && (aiClosed(cx + d[0], cz) || aiClosed(cx, cz + d[1]))) continue;
+      const ni = nz * MW + nx, ng = gS[cur] + d[2];
+      if (seen[ni] === stamp && ng >= gS[ni]) continue;
+      seen[ni] = stamp; gS[ni] = ng; came[ni] = cur;
+      const hx = Math.abs(nx - t[0]), hz = Math.abs(nz - t[1]);
+      hpush(ni, ng + (hx + hz) + (1.414 - 2) * Math.min(hx, hz));
+    }
+  }
+  return null;
+}
+function clearLine(x0, z0, x1, z1) {
+  const d = Math.hypot(x1 - x0, z1 - z0), n = Math.max(1, Math.ceil(d / 0.8));
+  for (let i = 1; i <= n; i++) if (aiBlocked(x0 + (x1 - x0) * i / n, z0 + (z1 - z0) * i / n, 0.6)) return false;
+  return true;
+}
+function pathTo(sx, sz, tx, tz) {
+  const cells = astarCells(sx, sz, tx, tz);
+  if (!cells) return null;
+  const pts = cells.map(c => [wc(c[0]), wc(c[1])]);
+  const out = []; let cx = sx, cz = sz, i = 0;
+  while (i < pts.length) {
+    let j = Math.min(pts.length - 1, i + 14);
+    while (j > i && !clearLine(cx, cz, pts[j][0], pts[j][1])) j--;
+    out.push(pts[j]); cx = pts[j][0]; cz = pts[j][1]; i = j + 1;
+  }
+  return out;
+}
+function randomOpenNear(x, z, r) {
+  for (let k = 0; k < 24; k++) {
+    const a = Math.random() * 6.283, d = 2 + Math.random() * r, nx = x + Math.cos(a) * d, nz = z + Math.sin(a) * d;
+    if (!aiClosed(cellOf(nx), cellOf(nz))) return [nx, nz];
+  }
+  return [x, z];
+}
+/* ================= renderer, scene, world meshes ================= */
+const $ = id => document.getElementById(id);
+const stage = $('stage'), canvas = $('gl');
+let renderer;
+try { renderer = new THREE.WebGLRenderer({ canvas, antialias: false, powerPreference: 'high-performance' }); }
+catch (e) { stage.replaceChildren(Object.assign(document.createElement('p'), { textContent: 'This view needs WebGL, which is not available here.', style: 'padding:24px' })); throw e; }
+renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
+const FOGC = 0x04070a;
+renderer.setClearColor(FOGC);
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(FOGC);
+scene.fog = new THREE.FogExp2(FOGC, 0.02);
+const camera = new THREE.PerspectiveCamera(74, 1, 0.1, 240);
+camera.rotation.order = 'YXZ';
+scene.add(camera);
+const ambientL = new THREE.AmbientLight(0x5a6c8c, 0.95); scene.add(ambientL);
+const moonLight = new THREE.DirectionalLight(0x9ab4e4, 0.6); moonLight.position.set(-60, 100, -40); scene.add(moonLight);
+const flashlight = new THREE.SpotLight(0xf2f6ff, 3.2, 55, 0.62, 0.6, 1.1);
+flashlight.position.set(0.25, -0.2, 0); camera.add(flashlight); camera.add(flashlight.target); flashlight.target.position.set(0, 0, -1);
+
+/* textures */
+function canvasTex(w, h, fn) {
+  const c = document.createElement('canvas'); c.width = w; c.height = h; fn(c.getContext('2d'), w, h);
+  const t = new THREE.CanvasTexture(c); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.anisotropy = 2; return t;
+}
+const speckle = (g, w, h, n, col, a) => { for (let i = 0; i < n; i++) { g.fillStyle = col; g.globalAlpha = Math.random() * (a || 0.25); g.fillRect(Math.random() * w, Math.random() * h, 1 + Math.random() * 2, 1 + Math.random() * 2); } g.globalAlpha = 1; };
+const TEX = {
+  grass: canvasTex(128, 128, (g, w, h) => { g.fillStyle = '#0d1510'; g.fillRect(0, 0, w, h); speckle(g, w, h, 900, '#2a4a2a', 0.5); speckle(g, w, h, 400, '#000', 0.5); }),
+  asphaltH: canvasTex(256, 128, (g, w, h) => { g.fillStyle = '#16191c'; g.fillRect(0, 0, w, h); speckle(g, w, h, 900, '#3a4046', 0.3); g.fillStyle = '#7a6a2a'; g.fillRect(0, h / 2 - 2, w * 0.5, 4); }),
+  asphaltV: canvasTex(128, 256, (g, w, h) => { g.fillStyle = '#16191c'; g.fillRect(0, 0, w, h); speckle(g, w, h, 900, '#3a4046', 0.3); g.fillStyle = '#7a6a2a'; g.fillRect(w / 2 - 2, 0, 4, h * 0.5); }),
+  floor: canvasTex(256, 256, (g, w, h) => { g.fillStyle = '#1a1f23'; g.fillRect(0, 0, w, h); speckle(g, w, h, 900, '#000'); speckle(g, w, h, 500, '#4a565c'); g.strokeStyle = '#272f35'; g.lineWidth = 2; g.strokeRect(1, 1, w - 2, h - 2); g.beginPath(); g.moveTo(w / 2, 0); g.lineTo(w / 2, h); g.moveTo(0, h / 2); g.lineTo(w, h / 2); g.stroke(); }),
+  wall: canvasTex(128, 256, (g, w, h) => { g.fillStyle = '#2d363c'; g.fillRect(0, 0, w, h); g.fillStyle = '#222b2b'; g.fillRect(0, h * 0.62, w, h * 0.38); g.fillStyle = '#3f4b50'; g.fillRect(0, h * 0.62 - 2, w, 4); speckle(g, w, h, 700, '#000'); speckle(g, w, h, 300, '#5b6a70'); g.fillStyle = 'rgba(0,0,0,0.25)'; g.fillRect(w / 2 - 1, 0, 2, h * 0.62); }),
+  siding: canvasTex(128, 128, (g, w, h) => { g.fillStyle = '#2b2f33'; g.fillRect(0, 0, w, h); g.fillStyle = 'rgba(0,0,0,0.35)'; for (let y = 0; y < h; y += 12) g.fillRect(0, y, w, 2); speckle(g, w, h, 500, '#000'); speckle(g, w, h, 200, '#5c6870'); }),
+  hedge: canvasTex(64, 64, (g, w, h) => { g.fillStyle = '#0f1f12'; g.fillRect(0, 0, w, h); speckle(g, w, h, 600, '#2f5a30', 0.6); speckle(g, w, h, 300, '#000', 0.6); }),
+  roof: canvasTex(64, 64, (g, w, h) => { g.fillStyle = '#15181a'; g.fillRect(0, 0, w, h); speckle(g, w, h, 400, '#3a4044'); }),
+  door: canvasTex(256, 256, (g, w, h) => { g.fillStyle = '#3a2f24'; g.fillRect(0, 0, w, h); g.strokeStyle = '#e8a23a'; g.lineWidth = 6; g.strokeRect(10, 10, w - 20, h - 20); g.fillStyle = '#e8a23a'; g.font = 'bold 52px Impact, "Arial Narrow", sans-serif'; g.textAlign = 'center'; g.fillText('HALL 4', w / 2, 120); g.font = 'bold 26px "Courier New", monospace'; g.fillText('SEALED', w / 2, 168); speckle(g, w, h, 600, '#000'); }),
+  glow: canvasTex(64, 64, (g, w, h) => { const r = g.createRadialGradient(w / 2, h / 2, 0, w / 2, h / 2, w / 2); r.addColorStop(0, 'rgba(255,255,255,1)'); r.addColorStop(1, 'rgba(255,255,255,0)'); g.fillStyle = r; g.fillRect(0, 0, w, h); })
+};
+TEX.glow.wrapS = TEX.glow.wrapT = THREE.ClampToEdgeWrapping;
+const mat = (map, color) => new THREE.MeshLambertMaterial({ map, color: color || 0xffffff });
+function plane(w, d, x, y, z, m, ux, uz) {
+  const g = new THREE.PlaneGeometry(w, d), uv = g.attributes.uv;
+  for (let i = 0; i < uv.count; i++) uv.setXY(i, uv.getX(i) * ux, uv.getY(i) * uz);
+  const mesh = new THREE.Mesh(g, m); mesh.rotation.x = -Math.PI / 2; mesh.position.set(x, y, z); scene.add(mesh); return mesh;
+}
+const glowSprite = (color, size, op, fog) => { const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: TEX.glow, color, transparent: true, opacity: op, blending: THREE.AdditiveBlending, depthWrite: false, fog: fog !== false })); s.scale.set(size, size, 1); return s; };
+
+/* ground, roads, interior floors */
+plane(MW * CS, MH * CS, MW * CS / 2, 0, MH * CS / 2, mat(TEX.grass), MW * CS / 12, MH * CS / 12);
+roads.forEach(r => { const h = r[2] > r[3]; plane(r[2] * CS, r[3] * CS, (r[0] + r[2] / 2) * CS, 0.02, (r[1] + r[3] / 2) * CS, mat(h ? TEX.asphaltH : TEX.asphaltV), h ? r[2] * CS / 32 : 1, h ? 1 : r[3] * CS / 32); });
+const floorMat = mat(TEX.floor);
+floors.forEach(f => { if (f[2] > 0 && f[3] > 0) plane(f[2] * CS, f[3] * CS, (f[0] + f[2] / 2) * CS, 0.04, (f[1] + f[3] / 2) * CS, floorMat, f[2] * CS / 8, f[3] * CS / 8); });
+
+/* walls, houses, hedges, trees (instanced; culling off because r128 cannot cull instances) */
+function nearOpen(i, j, r) { for (let b = j - r; b <= j + r; b++) for (let a = i - r; a <= i + r; a++) { if (a < 0 || b < 0 || a >= MW || b >= MH) continue; const c = grid[b][a]; if (c === '.' || c === ',' || c === 'D') return true; } return false; }
+const cellLists = { '#': [], B: [], h: [], T: [] };
+for (let j = 0; j < MH; j++) for (let i = 0; i < MW; i++) { const c = grid[j][i]; if (!cellLists[c]) continue; if (c === 'h' || nearOpen(i, j, 1)) cellLists[c].push([i, j]); }
+function instanced(geo, material, list, place) {
+  const m = new THREE.InstancedMesh(geo, material, Math.max(1, list.length)), o = new THREE.Object3D();
+  list.forEach((c, k) => { place(o, c, k); o.updateMatrix(); m.setMatrixAt(k, o.matrix); });
+  m.count = list.length; m.instanceMatrix.needsUpdate = true; m.frustumCulled = false; scene.add(m); return m;
+}
+instanced(new THREE.BoxGeometry(CS, WALL_H, CS), mat(TEX.wall), cellLists['#'], (o, c) => o.position.set(wc(c[0]), WALL_H / 2, wc(c[1])));
+instanced(new THREE.BoxGeometry(CS, HOUSE_H, CS), mat(TEX.siding), cellLists.B, (o, c) => o.position.set(wc(c[0]), HOUSE_H / 2, wc(c[1])));
+instanced(new THREE.BoxGeometry(CS, 2.3, CS), mat(TEX.hedge), cellLists.h, (o, c) => o.position.set(wc(c[0]), 1.15, wc(c[1])));
+{ const wl = [], bl2 = [];
+  for (let j = 0; j < MH; j++) for (let i = 0; i < MW; i++) { if (grid[j][i] === 'w') wl.push([i, j]); else if (i >= CREEK.x0 && i <= CREEK.x1 && j >= CREEK.z0 && j <= CREEK.z1 && grid[j][i] === ',') bl2.push([i, j]); }
+  instanced(new THREE.BoxGeometry(CS, 0.1, CS), new THREE.MeshBasicMaterial({ color: 0x0b1c26 }), wl, (o, c) => o.position.set(wc(c[0]), -0.02, wc(c[1])));
+  instanced(new THREE.BoxGeometry(CS, 0.2, CS), new THREE.MeshLambertMaterial({ color: 0x3a2c20 }), bl2, (o, c) => o.position.set(wc(c[0]), 0.1, wc(c[1]))); }
+instanced(new THREE.CylinderGeometry(0.35, 0.5, 3, 6), new THREE.MeshLambertMaterial({ color: 0x1a1410 }), cellLists.T, (o, c) => { o.position.set(wc(c[0]) + (Math.random() - 0.5) * 1.4, 1.5, wc(c[1]) + (Math.random() - 0.5) * 1.4); o.scale.set(1, 1, 1); });
+instanced(new THREE.ConeGeometry(2.4, 8, 7), new THREE.MeshLambertMaterial({ color: 0x0c1a10 }), cellLists.T, (o, c) => { const s = 0.8 + Math.random() * 0.7; o.position.set(wc(c[0]) + (Math.random() - 0.5) * 1.4, 4.6 * s, wc(c[1]) + (Math.random() - 0.5) * 1.4); o.scale.set(s, s, s); o.rotation.y = Math.random() * 6; });
+const roofMat = mat(TEX.roof);
+roofs.forEach(r => { const m = new THREE.Mesh(new THREE.BoxGeometry(r.w * CS + 0.8, 0.6, r.h * CS + 0.8), roofMat.clone()); m.material.color.setHex(r.color === 0x14181b ? 0x888888 : 0xffffff); m.position.set((r.x + r.w / 2) * CS, r.hy + 0.3, (r.y + r.h / 2) * CS); scene.add(m); });
+instanced(new THREE.PlaneGeometry(1.5, 1.7), new THREE.MeshBasicMaterial({ color: 0xffd9a0 }), windows, (o, w) => o.position.set(w.x, w.y, w.z));
+windows.forEach(w => { const g = glowSprite(0xffb060, 5, 0.35); g.position.set(w.x, w.y, w.z + 0.6); scene.add(g); });
+
+/* props */
+props.forEach(p => {
+  const m = new THREE.Mesh(new THREE.BoxGeometry(p.w, p.h, p.d), new THREE.MeshLambertMaterial({ color: p.color })); m.position.set(p.x, p.h / 2, p.z); scene.add(m);
+  if (p.car) { const c = new THREE.Mesh(new THREE.BoxGeometry(p.w * (p.w > p.d ? 0.55 : 0.9), 0.6, p.d * (p.w > p.d ? 0.9 : 0.55)), new THREE.MeshLambertMaterial({ color: 0x101418 })); c.position.set(p.x, p.h + 0.3, p.z); scene.add(c); }
+  if (p.hide) { const s = new THREE.Mesh(new THREE.BoxGeometry(p.w * 0.9, 0.08, 0.05), new THREE.MeshBasicMaterial({ color: 0x050607 })); s.position.set(p.x, Math.min(p.h - 0.4, 1.7), p.z + p.d / 2 + 0.02); scene.add(s); }
+});
+
+/* streetlamps */
+const lampList = lightSrc.filter(l => l.lamp);
+const poleMat = new THREE.MeshLambertMaterial({ color: 0x1a1d20 });
+instanced(new THREE.CylinderGeometry(0.12, 0.14, 5.4, 6), poleMat, lampList, (o, l) => o.position.set(l.x, 2.7, l.z));
+instanced(new THREE.SphereGeometry(0.34, 8, 6), new THREE.MeshBasicMaterial({ color: 0xffd9a0 }), lampList.filter(l => !l.broken), (o, l) => o.position.set(l.x, 5.5, l.z));
+instanced(new THREE.SphereGeometry(0.3, 8, 6), new THREE.MeshBasicMaterial({ color: 0x2a2c2e }), lampList.filter(l => l.broken), (o, l) => o.position.set(l.x, 5.5, l.z));
+lampList.filter(l => !l.broken).forEach(l => { const g = glowSprite(0xffc070, 7, 0.55); g.position.set(l.x, 5.5, l.z); l.sprite = g; scene.add(g); });
+
+/* doors */
+const doorMats = { sealed: new THREE.MeshLambertMaterial({ map: TEX.door, emissive: 0x2a1c08 }), wood: new THREE.MeshLambertMaterial({ color: 0x4a3426 }), metal: new THREE.MeshLambertMaterial({ color: 0x3a3f44 }), iron: new THREE.MeshLambertMaterial({ color: 0x141618 }) };
+doors.forEach(d => {
+  const n = d.cells.length, mm = d.tag === 'sealed' ? doorMats.sealed : d.tag === 'tower-gate' ? doorMats.iron : (d.tag === 'dock' || /back|side|classroom|ward/.test(d.tag)) ? doorMats.metal : doorMats.wood;
+  const h = d.tag === 'tower-gate' ? 2.4 : WALL_H;
+  d.mesh = new THREE.Mesh(d.axis === 'x' ? new THREE.BoxGeometry(n * CS - 0.1, h, 0.5) : new THREE.BoxGeometry(0.5, h, n * CS - 0.1), mm);
+  d.h = h; d.mesh.position.set(d.x, h / 2, d.z); scene.add(d.mesh);
+});
+
+/* clue pages, pickups, lanterns */
+const clueObjs = clues.map(c => {
+  const grp = new THREE.Group(); grp.position.set(c.x, c.y, c.z);
+  const paper = new THREE.Mesh(new THREE.PlaneGeometry(0.5, 0.66), new THREE.MeshBasicMaterial({ color: 0xfff2c8, side: THREE.DoubleSide })); paper.rotation.x = -Math.PI / 2 + 0.35; grp.add(paper);
+  const glow = glowSprite(0xffc46b, 2.6, 0.75); grp.add(glow);
+  const beam = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.035, 5, 6, 1, true), new THREE.MeshBasicMaterial({ color: 0xffe2a0, transparent: true, opacity: 0.25, blending: THREE.AdditiveBlending, depthWrite: false })); beam.position.y = 2.5; grp.add(beam);
+  scene.add(grp); return { grp, paper, glow, beam, y: c.y };
+});
+function openSpot(x, z) { for (let r = 0; r < 6; r += 0.6) for (let a = 0; a < 6.3; a += 0.8) { const px = x + Math.cos(a) * r, pz = z + Math.sin(a) * r; if (!blocked(px, pz, 0.5)) return [px, pz]; } return [x, z]; }
+oathHouses.forEach(h => { const s = openSpot(h.x, h.z); pickups.push({ x: s[0], z: s[1], y: 0.9, type: 'flame', name: 'the ' + h.name + ' house' }); });
+pickups.forEach(p => {
+  const bat = p.type === 'battery', fl = p.type === 'flame', col = fl ? 0xffb04a : bat ? 0xe8d27a : 0x8fd0a0;
+  p.mesh = new THREE.Mesh(fl ? new THREE.SphereGeometry(0.16, 8, 6) : bat ? new THREE.CylinderGeometry(0.16, 0.16, 0.5, 8) : new THREE.CylinderGeometry(0.1, 0.12, 0.42, 8), new THREE.MeshBasicMaterial({ color: col }));
+  p.mesh.position.set(p.x, fl ? p.y : (bat ? 0.35 : 0.3), p.z); scene.add(p.mesh); p.taken = false;
+  const g = glowSprite(col, fl ? 3.2 : 1.8, fl ? 0.8 : 0.45); g.position.copy(p.mesh.position); scene.add(g); p.glow = g;
+});
+lanterns.forEach(l => {
+  const post = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.1, 1.5, 6), poleMat); post.position.set(l.x, 0.75, l.z); scene.add(post);
+  l.lamp = new THREE.Mesh(new THREE.BoxGeometry(0.34, 0.46, 0.34), new THREE.MeshBasicMaterial({ color: 0xffe3a8 })); l.lamp.position.set(l.x, 1.7, l.z); scene.add(l.lamp);
+  l.glow = glowSprite(0xffb050, 6, 0.8); l.glow.position.copy(l.lamp.position); scene.add(l.glow);
+  light(l.x, 2, l.z, 0xffb050, 0.9, 20, 9, 0.7, false); l.src = lightSrc[lightSrc.length - 1];
+});
+
+/* the Lathe (a rotating tesseract) and the water tower */
+const TV = [], TE = [];
+for (let i = 0; i < 16; i++) TV.push([i & 1 ? 1 : -1, i & 2 ? 1 : -1, i & 4 ? 1 : -1, i & 8 ? 1 : -1]);
+for (let i = 0; i < 16; i++) for (let b = 0; b < 4; b++) { const j = i ^ (1 << b); if (j > i) TE.push([i, j]); }
+const tessGeo = new THREE.BufferGeometry(), tessPos = new Float32Array(TE.length * 6);
+tessGeo.setAttribute('position', new THREE.BufferAttribute(tessPos, 3));
+const tess1 = new THREE.LineSegments(tessGeo, new THREE.LineBasicMaterial({ color: 0xc58bff })); tess1.position.set(80 + OFFX, 3.7, 60 + OFFZ); tess1.scale.setScalar(1.35); tess1.frustumCulled = false; scene.add(tess1);
+const tess2 = new THREE.LineSegments(tessGeo, new THREE.LineBasicMaterial({ color: 0xece0ff })); tess2.position.set(140 + OFFX, 6.2, 12 + OFFZ); tess2.scale.setScalar(2.4); tess2.frustumCulled = false; scene.add(tess2);
+function updateTess(t) {
+  const a = t * 0.35, b = t * 0.23, g = t * 0.15, pts = [];
+  for (let i = 0; i < 16; i++) {
+    const v = TV[i]; let c = Math.cos(a), s = Math.sin(a);
+    const x1 = v[0] * c - v[3] * s, w1 = v[0] * s + v[3] * c; c = Math.cos(b); s = Math.sin(b);
+    const y1 = v[1] * c - v[2] * s, z1 = v[1] * s + v[2] * c; c = Math.cos(g); s = Math.sin(g);
+    const z2 = z1 * c - w1 * s, w2 = z1 * s + w1 * c, d = 2.8 / (2.8 - w2); pts.push([x1 * d, y1 * d, z2 * d]);
+  }
+  TE.forEach((e, k) => { const p = pts[e[0]], q = pts[e[1]]; tessPos.set([p[0], p[1], p[2], q[0], q[1], q[2]], k * 6); });
+  tessGeo.attributes.position.needsUpdate = true;
+}
+const towerMat = new THREE.MeshLambertMaterial({ color: 0x2a2f33 });
+{
+  [[-5, -5], [5, -5], [-5, 5], [5, 5]].forEach(o => { const leg = new THREE.Mesh(new THREE.BoxGeometry(0.7, 20, 0.7), towerMat); leg.position.set(TOWER.x + o[0], 10, TOWER.z + o[1]); scene.add(leg); });
+  const tank = new THREE.Mesh(new THREE.CylinderGeometry(7, 7, 6, 14), towerMat); tank.position.set(TOWER.x, 23, TOWER.z); scene.add(tank);
+  const cap = new THREE.Mesh(new THREE.ConeGeometry(7.4, 3, 14), towerMat); cap.position.set(TOWER.x, 27.5, TOWER.z); scene.add(cap);
+}
+const towerRed = glowSprite(0xff2a1a, 7, 0.9, false); towerRed.position.set(TOWER.x, 30, TOWER.z); scene.add(towerRed);
+const towerBeam = new THREE.Mesh(new THREE.CylinderGeometry(0.7, 0.7, 500, 8, 1, true), new THREE.MeshBasicMaterial({ color: 0xc58bff, transparent: true, opacity: 0.5, blending: THREE.AdditiveBlending, depthWrite: false, fog: false }));
+towerBeam.position.set(TOWER.x, 250, TOWER.z); towerBeam.visible = false; scene.add(towerBeam);
+const moon = glowSprite(0xaec4ff, 60, 0.7, false); scene.add(moon);
+
+/* ---------- light pool: the nearest few sources get real lights ---------- */
+const POOL = 6, pool = [];
+for (let i = 0; i < POOL; i++) { const l = new THREE.PointLight(0xffffff, 0, 30, 1.6); l.userData = { src: null, k: 0 }; scene.add(l); pool.push(l); }
+const bl = { x: 0, z: 0, until: 0, r: 0 };           // a blackout: lights near this point die for a while
+function srcLevel(s, t) {
+  if (s.broken || s.int <= 0) return 0;
+  if (t < bl.until && Math.hypot(s.x - bl.x, s.z - bl.z) < bl.r) return 0;
+  if (!s.flick) return 1;
+  const f = Math.sin(t * 23 + s.x) * Math.sin(t * 7.3 + s.z); return f > 0.35 ? 0.1 : f > -0.2 ? 1 : 0.55;
+}
+function updateLights(px, pz, t, dt) {
+  const near = [];
+  for (const s of lightSrc) { if (s.broken) continue; const d = Math.hypot(s.x - px, s.z - pz); if (d < s.dist + 14) near.push([d, s]); }
+  near.sort((a, b) => a[0] - b[0]);
+  const want = near.slice(0, POOL).map(n => n[1]);
+  pool.forEach(l => { if (l.userData.src && want.indexOf(l.userData.src) === -1) l.userData.src = null; });
+  want.forEach(s => { if (!pool.some(l => l.userData.src === s)) { const l = pool.find(q => !q.userData.src || q.intensity < 0.02); if (l) { l.userData.src = s; l.intensity = 0; l.position.set(s.x, s.y, s.z); l.color.setHex(s.color); l.distance = s.dist; } } });
+  pool.forEach(l => { const s = l.userData.src, tgt = s ? s.int * srcLevel(s, t) : 0; l.intensity += (tgt - l.intensity) * Math.min(1, dt * 7); });
+  lampList.forEach(l => { if (l.sprite) { l.sprite.material.opacity = 0.55 * srcLevel(l, t); } });
+}
+/* ================= player state, searchers, AI ================= */
+const S = {
+  mode: 'menu', t: 0, yaw: START.yaw, pitch: 0, px: START.x, pz: START.z, eye: 1.65, crouch: false, sprint: false, moving: false,
+  flash: true, battery: 100, stamina: 100, exhausted: false, bottles: 0, breath: 100, holding: false, gasp: 0, hiding: null,
+  meter: 0, light: 0, chasers: 0, read: new Set(), ck: { x: START.x, z: START.z, yaw: START.yaw }, chapter: 0, memories: 0,
+  deaths: 0, coins: 0, flames: new Set(), counted: false, jy: 0, jv: 0, clock: 0, night: 1, dayL: 0, stepT: 0, beatT: 0, shake: 0, fear: 0, tallOn: false, finale: 0, noiseT: 0, ambush: null, blackoutT: 0
+};
+const DIFF = { detect: 0.8, chase: 5.1, tall: 7.2 };
+const held = new Set(), touch = { x: 0, y: 0, sprint: false, breath: false };
+
+function lightAt(x, z) {
+  const ci = cellOf(x), cj = cellOf(z);
+  let l = (ci >= 0 && cj >= 0 && ci < MW && cj < MH && grid[cj][ci] === '.') ? 0.03 : 0.1;
+  for (const s of lightSrc) {
+    if (s.r <= 0 || s.broken) continue;
+    const d = Math.hypot(x - s.x, z - s.z);
+    if (d < s.r) l += s.i * Math.pow(1 - d / s.r, 1.3) * srcLevel(s, S.t);
+  }
+  l += S.dayL; if (S.flash && S.battery > 0) l += 0.4;
+  return Math.min(1, l);
+}
+function exposure() {
+  if (S.charm > 0) return 0;
+  const lm = 0.22 + 0.78 * S.light, st = S.crouch ? 0.45 : (S.sprint ? 1.9 : 1);
+  return st * (S.moving ? 1 : 0.4) * lm * DIFF.detect;
+}
+
+/* ---------- models ---------- */
+const coatM = new THREE.MeshLambertMaterial({ color: 0x151a1f }), maskM = new THREE.MeshLambertMaterial({ color: 0xdfe3e6, emissive: 0x2a2f33 });
+const coneGeo = new THREE.ConeGeometry(Math.tan(0.5) * 16, 16, 20, 1, true); coneGeo.translate(0, -8, 0); coneGeo.rotateX(-Math.PI / 2);
+function limb(parent, x, y, w, h, d, mat2) { const pv = new THREE.Group(); pv.position.set(x, y, 0); const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), mat2); m.position.y = -h / 2; pv.add(m); parent.add(pv); return pv; }
+function makeWarden() {
+  const grp = new THREE.Group();
+  const body = new THREE.Mesh(new THREE.BoxGeometry(0.75, 1.5, 0.42), coatM); body.position.y = 1.85;
+  const head = new THREE.Mesh(new THREE.SphereGeometry(0.23, 12, 10), maskM); head.position.y = 2.85; head.scale.set(0.9, 1.25, 0.9);
+  const legs = [limb(grp, -0.2, 1.1, 0.24, 1.1, 0.26, coatM), limb(grp, 0.2, 1.1, 0.24, 1.1, 0.26, coatM)];
+  const arms = [limb(grp, -0.48, 2.5, 0.13, 1.5, 0.15, coatM), limb(grp, 0.48, 2.5, 0.13, 1.5, 0.15, coatM)];
+  const cone = new THREE.Mesh(coneGeo, new THREE.MeshBasicMaterial({ color: 0xcfe8ff, transparent: true, opacity: 0.075, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide }));
+  cone.position.set(0, 2.3, 0.35); grp.add(body, head, cone);
+  return { grp, legs, arms, cone };
+}
+const paleM = new THREE.MeshBasicMaterial({ color: 0x9aa0a6 }), voidM = new THREE.MeshBasicMaterial({ color: 0x020203 });
+function makeTall() {
+  const grp = new THREE.Group();
+  const body = new THREE.Mesh(new THREE.BoxGeometry(0.55, 2.4, 0.3), paleM); body.position.y = 3.3;
+  const head = new THREE.Mesh(new THREE.SphereGeometry(0.2, 10, 8), paleM); head.position.set(0.05, 4.85, 0.12); head.scale.set(0.8, 1.5, 0.8); head.rotation.z = 0.25;
+  const face = new THREE.Mesh(new THREE.PlaneGeometry(0.3, 0.6), voidM); face.position.set(0.1, 4.8, 0.31); face.rotation.z = 0.25;
+  const legs = [limb(grp, -0.16, 2.2, 0.16, 2.2, 0.18, paleM), limb(grp, 0.16, 2.2, 0.16, 2.2, 0.18, paleM)];
+  const arms = [limb(grp, -0.42, 4.3, 0.1, 3.4, 0.12, paleM), limb(grp, 0.42, 4.3, 0.1, 3.4, 0.12, paleM)];
+  grp.add(body, head, face);
+  return { grp, legs, arms, cone: null };
+}
+
+/* ---------- searchers ---------- */
+const guards = [];
+function addGuard(type, zone, def) {
+  const m = type === 'tall' ? makeTall() : makeWarden();
+  scene.add(m.grp);
+  const g = Object.assign({ type, zone, def, x: 0, z: 0, h: 0, idx: 1, dir: 1, state: 'patrol', alert: 0, path: [], pi: 0, pathT: 0, wait: 0, last: null, loseT: 0, searchT: 0, queue: [], spot: null, checkT: 0, hideKnown: null, openT: 0, phase: Math.random() * 6, stepAcc: 0, scanT: 0, active: false, ambush: false, speedNow: 0 }, m);
+  guards.push(g); resetGuard(g); setActive(g, false); return g;
+}
+function setActive(g, on) { g.active = on; g.grp.visible = on; }
+function resetGuard(g) {
+  g.state = g.type === 'tall' ? 'hunt' : 'patrol'; g.alert = 0; g.last = null; g.path = []; g.pi = 0; g.wait = 0; g.openT = 0; g.hideKnown = null; g.spot = null; g.queue = [];
+  if (g.def) { g.idx = 1 % g.def.path.length; g.dir = 1; g.x = g.def.path[0][0]; g.z = g.def.path[0][1]; const n = g.def.path[g.idx]; g.h = Math.atan2(n[0] - g.x, n[1] - g.z); }
+}
+patrols.forEach(p => addGuard('warden', p.zone, p));
+for (let i = 0; i < 8; i++) { const g = addGuard('warden', 'ambush', null); g.ambush = true; }
+const tallOne = addGuard('tall', 'town', null);
+
+function setPath(g, tx, tz) { g.path = pathTo(g.x, g.z, tx, tz) || [[tx, tz]]; g.pi = 0; g.pathT = 0; }
+function turnTo(g, tx, tz, dt, rate) { const want = Math.atan2(tx - g.x, tz - g.z); g.h += clamp(angDiff(want, g.h), -rate * dt, rate * dt); return Math.abs(angDiff(want, g.h)); }
+function followPath(g, dt, speed) {
+  if (g.pi >= g.path.length) return true;
+  const p = g.path[g.pi], dx = p[0] - g.x, dz = p[1] - g.z, d = Math.hypot(dx, dz);
+  if (d < 0.7) { g.pi++; return g.pi >= g.path.length; }
+  const off = turnTo(g, p[0], p[1], dt, g.type === 'tall' ? 5 : 4);
+  if (off > 0.7) { g.speedNow = 0; return false; }
+  // closed doors cost time to open: this is the player's best friend in a chase
+  const ax = g.x + Math.sin(g.h) * 1.5, az = g.z + Math.cos(g.h) * 1.5, ci = cellOf(ax), cj = cellOf(az);
+  if (grid[cj] && grid[cj][ci] === 'D') {
+    const dr = doorAt[ci + ',' + cj];
+    if (!dr.open && !dr.locked) { if (g.openT <= 0) g.openT = g.type === 'tall' ? 1.9 : 1.25; g.openT -= dt; g.speedNow = 0; if (g.openT <= 0) { dr.open = true; g.openT = 0; makeNoise(dr.x, dr.z, 9, 'door', g); } return false; }
+  }
+  const s = Math.min(speed * dt, d);
+  g.x += Math.sin(g.h) * s; g.z += Math.cos(g.h) * s; g.speedNow = speed; g.stepAcc += s;
+  return false;
+}
+function startChase(g) {
+  if (g.state === 'chase' || g.state === 'grab') return;
+  g.state = 'chase'; g.alert = 1; g.loseT = 0; g.last = [S.px, S.pz]; setPath(g, S.px, S.pz);
+  sfxSting(g.type === 'tall' ? 2 : 1);
+  guards.forEach(o => { if (o !== g && o.active && o.type !== 'tall' && o.state !== 'chase' && Math.hypot(o.x - g.x, o.z - g.z) < 40) { o.state = 'investigate'; o.last = [S.px, S.pz]; o.alert = Math.max(o.alert, 0.5); setPath(o, S.px, S.pz); } });
+}
+function makeNoise(x, z, r, kind, src) {
+  for (const g of guards) {
+    if (!g.active || g === src || g.state === 'grab') continue;
+    let d = Math.hypot(g.x - x, g.z - z); if (d > r * 1.6) continue;
+    if (!los(g.x, g.z, x, z)) d *= 1.5;
+    if (d >= r) continue;
+    const tall = g.type === 'tall';
+    if (g.state === 'chase') { if (kind === 'player') { g.last = [x, z]; } continue; }
+    if (g.state === 'investigate' && g.last && Math.hypot(g.last[0] - x, g.last[1] - z) < 4) continue;
+    g.state = 'investigate'; g.last = [x, z]; g.alert = Math.max(g.alert, 0.3); g.scanT = 0; setPath(g, x, z);
+    if (tall && kind === 'player' && d < r * 0.5) { g.state = 'chase'; g.alert = 1; g.loseT = 0; sfxSting(2); }
+  }
+}
+
+function updateGuard(g, dt) {
+  if (!g.active) return;
+  if (g.stunT > 0) { g.stunT -= dt; g.speedNow = 0; return; }
+  const dx = S.px - g.x, dz = S.pz - g.z, d = Math.hypot(dx, dz), tall = g.type === 'tall';
+  if (g.state === 'grab') { g.speedNow = 0; return; }
+  if (g.state === 'finale') { followPath(g, dt, g.fSpeed || 2.0); return; }
+  const lm = 0.22 + 0.78 * S.light, viewR = (tall ? 14 + 18 * lm : 6 + 17 * lm) * (S.crouch && !S.moving ? 0.8 : 1);
+  const fov = (g.state === 'chase' || tall) ? 0.95 : 0.62;
+  let seeing = false;
+  if (!S.hiding && !(S.charm > 0) && d < viewR && Math.abs(angDiff(Math.atan2(dx, dz), g.h)) < fov && los(g.x, g.z, S.px, S.pz)) seeing = true;
+  if (seeing) {
+    let rate = exposure() * (1.25 - d / viewR) * (tall ? 1.5 : 1); if (d < 3) rate = Math.max(rate, 1.3); if (g.state === 'chase') rate = 2;
+    g.alert = Math.min(1.1, g.alert + rate * dt); g.last = [S.px, S.pz];
+    if (g.alert >= 1) startChase(g);
+  } else if (g.state !== 'chase') g.alert = Math.max(0, g.alert - 0.3 * dt);
+
+  switch (g.state) {
+    case 'patrol': {
+      if (g.alert > 0.28 && g.last) { g.state = 'investigate'; g.scanT = 0; setPath(g, g.last[0], g.last[1]); break; }
+      if (g.wait > 0) { g.wait -= dt; g.speedNow = 0; break; }
+      if (!g.path.length || g.pi >= g.path.length) { const w = g.def.path[g.idx]; setPath(g, w[0], w[1]); }
+      if (followPath(g, dt, 2.3)) {
+        g.wait = 0.8 + Math.random(); const n = g.def.path.length;
+        if (g.def.pp) { if (g.idx + g.dir >= n || g.idx + g.dir < 0) g.dir = -g.dir; g.idx += g.dir; } else g.idx = (g.idx + 1) % n;
+        g.path = [];
+      }
+      break;
+    }
+    case 'hunt': {   // the tall one stalks near you and listens
+      if (g.alert > 0.3 && g.last) { g.state = 'investigate'; setPath(g, g.last[0], g.last[1]); break; }
+      if (g.wait > 0) { g.wait -= dt; g.speedNow = 0; break; }
+      if (!g.path.length || g.pi >= g.path.length) { const t = randomOpenNear(S.px, S.pz, 26); setPath(g, t[0], t[1]); }
+      if (followPath(g, dt, 2.9)) { g.wait = 2 + Math.random() * 3; g.path = []; }
+      break;
+    }
+    case 'investigate': {
+      if (g.alert >= 1) { startChase(g); break; }
+      if (followPath(g, dt, tall ? 4.8 : 3.2)) { g.scanT += dt; g.h += Math.sin(g.scanT * 2.2) * dt * 1.6; if (g.scanT > 2.6) beginSearch(g, 6); }
+      break;
+    }
+    case 'chase': {
+      const chaseV = tall ? DIFF.tall : DIFF.chase;
+      if (seeing) { g.loseT = 0; g.pathT -= dt; if (g.pathT <= 0) { setPath(g, S.px, S.pz); g.pathT = 0.3; } }
+      else { g.loseT += dt; if (tall && g.loseT < 5 && Math.random() < dt * 2) g.last = [S.px + (Math.random() - 0.5) * 10, S.pz + (Math.random() - 0.5) * 10]; }
+      if (!seeing && g.hideKnown && g.loseT > 0.2) { const hs = g.hideKnown; setPath(g, hs.x, hs.z + hs.d / 2 + 0.8); g.hideKnown = null; g.spot = hs; g.state = 'check'; g.checkT = 0; g.known = true; break; }
+      const done = followPath(g, dt, chaseV);
+      if (done && !seeing) { if (g.loseT > 0.1) beginSearch(g, tall ? 18 : 13); else if (g.last) setPath(g, g.last[0], g.last[1]); }
+      if (g.loseT > 9) beginSearch(g, 8);
+      if ((seeing && d < 1.3) || (!S.hiding && d < 1.0)) { catchPlayer(g, 'chase'); }
+      break;
+    }
+    case 'search': {
+      g.searchT -= dt;
+      if (g.alert > 0.3 && seeing) { g.state = 'investigate'; setPath(g, g.last[0], g.last[1]); break; }
+      if (g.queue.length && !g.spot) { g.spot = g.queue.shift(); setPath(g, g.spot.x, g.spot.z + g.spot.d / 2 + 0.8); g.state = 'check'; g.checkT = 0; break; }
+      if (!g.path.length || g.pi >= g.path.length) { if (g.wait > 0) { g.wait -= dt; g.speedNow = 0; } else { const c = g.last || [g.x, g.z], t = randomOpenNear(c[0], c[1], 9); setPath(g, t[0], t[1]); g.wait = 1 + Math.random() * 1.5; } }
+      else followPath(g, dt, 2.6);
+      if (g.searchT <= 0) { g.state = tall ? 'hunt' : 'patrol'; g.alert = 0; g.path = []; g.last = null; if (g.def) { let bi = 0, bd = 1e9; g.def.path.forEach((p, i) => { const q = Math.hypot(p[0] - g.x, p[1] - g.z); if (q < bd) { bd = q; bi = i; } }); g.idx = bi; } if (g.ambush) setActive(g, false); }
+      break;
+    }
+    case 'check': {
+      if (g.alert >= 1 || (seeing && g.alert > 0.5)) { startChase(g); break; }
+      if (!followPath(g, dt, g.known ? 3.6 : 2.6)) break;
+      g.checkT += dt; g.speedNow = 0;
+      if (g.checkT > (g.known ? 1.4 : 1.8)) {
+        const sp = g.spot, wasKnown = g.known; g.spot = null; g.known = false; sp.checked = S.t;
+        if (S.hiding === sp) {
+          const p = (g.type === 'tall' ? 0.92 : (S.holding ? 0.4 : 0.8));
+          if (wasKnown || Math.random() < p) { catchPlayer(g, 'hide'); break; }
+        }
+        g.state = 'search'; g.path = [];
+      }
+      break;
+    }
+  }
+  // animation and footsteps
+  g.phase += g.speedNow * dt * 2.1;
+  const lift = Math.abs(Math.sin(g.phase)) * (tall ? 0.08 : 0.05);
+  g.grp.position.set(g.x, lift, g.z); g.grp.rotation.y = g.h;
+  const sw = g.speedNow > 0 ? Math.sin(g.phase) * (g.speedNow > 4 ? 0.9 : 0.55) : 0;
+  g.legs[0].rotation.x = sw; g.legs[1].rotation.x = -sw; g.arms[0].rotation.x = -sw * 0.5; g.arms[1].rotation.x = sw * 0.5;
+  if (tall && g.speedNow === 0) { g.arms[0].rotation.z = 0.05 + Math.sin(S.t * 2) * 0.05; g.arms[1].rotation.z = -0.05 - Math.sin(S.t * 1.7) * 0.05; }
+  if (g.cone) { const c = g.cone.material; if (g.state === 'chase') c.color.set(0xff5a4a); else if (g.alert > 0.25 || g.state === 'investigate') c.color.set(0xffc46b); else c.color.set(0xcfe8ff); c.opacity = 0.075 + g.alert * 0.07; }
+  if (g.stepAcc > (g.speedNow > 4 ? 2.4 : 1.7)) { g.stepAcc = 0; stepSound(g); }
+  if (g.state === 'search' && g.hideKnown) g.hideKnown = null;
+}
+function beginSearch(g, secs) {
+  g.state = 'search'; g.searchT = secs; g.path = []; g.pi = 0; g.wait = 0.6; g.alert = Math.min(g.alert, 0.5);
+  const c = g.last || [g.x, g.z];
+  g.queue = hideProps.filter(h => Math.hypot(h.x - c[0], h.z - c[1]) < 13 && (S.t - (h.checked || -99)) > 18).sort((a, b) => Math.hypot(a.x - c[0], a.z - c[1]) - Math.hypot(b.x - c[0], b.z - c[1])).slice(0, 3).filter(() => Math.random() < (g.type === 'tall' ? 0.95 : 0.6));
+  g.spot = null;
+}
+
+/* ---------- the director: spaced scares and the tall one ---------- */
+let dirT = 20, watcher = null;
+function placeAway(minD, maxD) {
+  for (let k = 0; k < 40; k++) {
+    const a = Math.random() * 6.283, d = minD + Math.random() * (maxD - minD), x = S.px + Math.cos(a) * d, z = S.pz + Math.sin(a) * d;
+    if (aiClosed(cellOf(x), cellOf(z))) continue; if (los(x, z, S.px, S.pz)) continue;
+    if (pathTo(S.px, S.pz, x, z)) return [x, z];
+  }
+  return null;
+}
+function updateDirector(dt) {
+  if (S.chapter < 1 || S.finale) return;
+  if (S.tallOn) {
+    if (!tallOne.active) { const p = placeAway(55, 80); if (p) { tallOne.x = p[0]; tallOne.z = p[1]; resetGuard(tallOne); tallOne.x = p[0]; tallOne.z = p[1]; setActive(tallOne, true); tallOne.state = 'hunt'; say('Something has started walking toward the sound of you.', 4500); } }
+    else if (Math.hypot(tallOne.x - S.px, tallOne.z - S.pz) > 150 && tallOne.state !== 'chase') { const p = placeAway(60, 85); if (p) { tallOne.x = p[0]; tallOne.z = p[1]; tallOne.path = []; } }
+  }
+  dirT -= dt;
+  if (dirT > 0) return;
+  dirT = 28 + Math.random() * 30;
+  const r = Math.random();
+  if (r < 0.35) { bl.x = S.px; bl.z = S.pz; bl.r = 34; bl.until = S.t + 10 + Math.random() * 8; sfxWhisper(); say('The lights nearby go out, one by one.', 3500); }
+  else if (r < 0.65) { sfxWhisper(); showWatcher(); }
+  else { const g = guards.find(q => q.active && q.zone === 'town' && !q.ambush && q.state === 'patrol' && Math.hypot(q.x - S.px, q.z - S.pz) < 90); if (g) { g.state = 'investigate'; g.last = [S.px + (Math.random() - 0.5) * 8, S.pz + (Math.random() - 0.5) * 8]; g.alert = 0.3; setPath(g, g.last[0], g.last[1]); } }
+}
+function showWatcher() {
+  const p = placeAway(24, 40); if (!p) return;
+  if (!watcher) { const m = makeTall(); watcher = { grp: m.grp, t: 0 }; scene.add(m.grp); }
+  watcher.grp.position.set(p[0], 0, p[1]); watcher.grp.rotation.y = Math.atan2(S.px - p[0], S.pz - p[1]); watcher.grp.visible = true; watcher.t = 0; watcher.on = true; watcher.stare = 0;
+}
+function updateWatcher(dt) {
+  if (!watcher || !watcher.on) return;
+  watcher.t += dt;
+  const dx = watcher.grp.position.x - S.px, dz = watcher.grp.position.z - S.pz, d = Math.hypot(dx, dz);
+  const facing = (-Math.sin(S.yaw) * dx + -Math.cos(S.yaw) * dz) / d;
+  if (facing > 0.93) watcher.stare += dt;
+  if (watcher.stare > 1.6 || d < 11 || watcher.t > 25) { watcher.on = false; watcher.grp.visible = false; if (d < 11 || watcher.stare > 1.6) sfxSting(1); }
+}
+/* ================= player, interaction, world update ================= */
+const fx = [];   // short-lived flashes (bottle impacts)
+function moveInput() {
+  let f = 0, s = 0;
+  if (held.has('KeyW') || held.has('ArrowUp')) f += 1; if (held.has('KeyS') || held.has('ArrowDown')) f -= 1;
+  if (held.has('KeyD') || held.has('ArrowRight')) s += 1; if (held.has('KeyA') || held.has('ArrowLeft')) s -= 1;
+  f += touch.y; s += touch.x;
+  const len = Math.hypot(f, s); if (len > 1) { f /= len; s /= len; }
+  return { f, s, len };
+}
+function movePlayer(dt) {
+  const m = moveInput(); S.moving = m.len > 0.12;
+  const want = (held.has('ShiftLeft') || held.has('ShiftRight') || touch.sprint) && S.moving && m.f > 0.3 && !S.crouch;
+  S.sprint = want && !S.exhausted && S.stamina > 0;
+  const sp = (S.crouch ? 2.3 : (S.sprint ? 6.9 : 4.4)) * S.speedMul;
+  const fx_ = -Math.sin(S.yaw), fz_ = -Math.cos(S.yaw), rx = Math.cos(S.yaw), rz = -Math.sin(S.yaw);
+  const vx = (fx_ * m.f + rx * m.s) * sp * dt, vz = (fz_ * m.f + rz * m.s) * sp * dt;
+  if (!blocked(S.px + vx, S.pz, 0.45)) S.px += vx;
+  if (!blocked(S.px, S.pz + vz, 0.45)) S.pz += vz;
+  // stamina
+  if (S.sprint) { S.stamina = Math.max(0, S.stamina - 17 * dt); if (S.stamina <= 0) { S.exhausted = true; say('Your lungs give out.', 2500); } S.rest = 0; }
+  else { S.rest = (S.rest || 0) + dt; if (S.rest > 0.6) S.stamina = Math.min(100, S.stamina + (S.moving ? 9 : 16) * dt); if (S.exhausted && S.stamina > 28) S.exhausted = false; }
+  // noise: running is loud, crouching is nearly silent
+  if (S.moving) {
+    S.noiseT -= dt;
+    if (S.noiseT <= 0) { S.noiseT = 0.42; makeNoise(S.px, S.pz, S.crouch ? 2.8 : (S.sprint ? 17 : 7.5), 'player'); }
+    S.stepT += dt * sp;
+    if (S.stepT > 2.6) { S.stepT = 0; sfxStep(S.crouch ? 0.01 : (S.sprint ? 0.09 : 0.04)); }
+  }
+}
+
+/* ---------- interaction ---------- */
+function nearestHide() {
+  const fx_ = -Math.sin(S.yaw), fz_ = -Math.cos(S.yaw); let best = null, bd = 1e9;
+  for (const p of hideProps) {
+    const nx = clamp(S.px, p.x0, p.x1), nz = clamp(S.pz, p.z0, p.z1), dx = nx - S.px, dz = nz - S.pz, d = Math.hypot(dx, dz);
+    if (d < 2.1 && (d < 0.9 || (dx * fx_ + dz * fz_) / d > 0.4) && d < bd) { bd = d; best = p; }
+  }
+  return best;
+}
+function nearestDoor() {
+  const fx_ = -Math.sin(S.yaw), fz_ = -Math.cos(S.yaw); let best = null, bd = 1e9;
+  for (const d of doors) for (const c of d.cells) {
+    const dx = wc(c[0]) - S.px, dz = wc(c[1]) - S.pz, dist = Math.hypot(dx, dz);
+    if (dist < 3.4 && (dist < 1.4 || (dx * fx_ + dz * fz_) / dist > 0.35) && dist < bd) { bd = dist; best = d; }
+  }
+  return best;
+}
+function nearestClue() {
+  const fx_ = -Math.sin(S.yaw), fz_ = -Math.cos(S.yaw); let best = null, bd = 1e9;
+  clues.forEach(c => { const dx = c.x - S.px, dz = c.z - S.pz, d = Math.hypot(dx, dz); if (d < 3.6 && (d < 1.7 || (dx * fx_ + dz * fz_) / d > 0.5) && d < bd) { bd = d; best = c; } });
+  return best;
+}
+function interactTarget() {
+  if (S.hiding) return { type: 'leave' };
+  const h = nearestHide(); if (h) return { type: 'hide', ref: h };
+  const c = nearestClue(); if (c) return { type: 'clue', ref: c };
+  const np = S.chapter === 1 ? npcs.find(n => Math.hypot(n.x - S.px, n.z - S.pz) < 2.8) : null; if (np) return { type: 'npc', ref: np };
+  const sl = S.chapter === 1 ? lanterns.find(l => l.lit && Math.hypot(l.x - S.px, l.z - S.pz) < 3.2) : null; if (sl) return { type: 'shop', ref: sl };
+  const d = nearestDoor(); if (d) return { type: 'door', ref: d };
+  return null;
+}
+function interact() {
+  if (S.mode !== 'play') return;
+  const t = interactTarget(); if (!t) return;
+  if (t.type === 'leave') leaveHide();
+  else if (t.type === 'hide') enterHide(t.ref);
+  else if (t.type === 'clue') readClue(t.ref);
+  else if (t.type === 'shop') openShop(t.ref);
+  else if (t.type === 'npc') talkTo(t.ref);
+  else toggleDoor(t.ref);
+}
+function toggleDoor(d) {
+  if (d.locked) { say(d.tag === 'sealed' ? 'Sealed. It will not open until you know the whole night (' + Math.min(3, [...S.read].filter(i => i < 7).length) + ' of 3 pages).' : d.tag === 'tower-gate' ? 'The gate will not open yet. The town still has pages to give.' : 'Locked from the other side.', 4000); return; }
+  if (d.open) { if (blocked(S.px, S.pz, 0.5) === false && cellCenterBlocks(d)) { say('Something is in the way.', 1800); return; } d.open = false; makeNoise(d.x, d.z, S.crouch ? 3 : 8, 'player'); sfxDoor(); }
+  else { d.open = true; makeNoise(d.x, d.z, S.crouch ? 3 : 8, 'player'); sfxDoor(); }
+}
+function cellCenterBlocks(d) { return d.cells.some(c => Math.hypot(wc(c[0]) - S.px, wc(c[1]) - S.pz) < 1.3); }
+function findExit(p) {
+  const out = S.hideOut || [0, 1], cands = [[out[0], out[1]], [0, 1], [0, -1], [1, 0], [-1, 0]];
+  for (const c of cands) { const x = p.x + c[0] * (p.w / 2 + 0.9), z = p.z + c[1] * (p.d / 2 + 0.9); if (!blocked(x, z, 0.45)) return [x, z]; }
+  return [p.x, p.z + p.d / 2 + 1];
+}
+function enterHide(p) {
+  const dx = S.px - p.x, dz = S.pz - p.z, m = Math.hypot(dx, dz) || 1, ux = Math.abs(dx) > Math.abs(dz) ? Math.sign(dx) : 0, uz = Math.abs(dx) > Math.abs(dz) ? 0 : Math.sign(dz) || 1;
+  S.hideOut = [ux, uz]; S.hideYaw = Math.atan2(-ux, -uz);
+  guards.forEach(g => { if (g.active && g.state === 'chase' && Math.hypot(g.x - S.px, g.z - S.pz) < 24 && los(g.x, g.z, S.px, S.pz)) g.hideKnown = p; });
+  S.hiding = p; S.px = p.x; S.pz = p.z; S.yaw = S.hideYaw; S.pitch = 0; S.crouch = false; S.breath = Math.max(S.breath, 60);
+  sfxDoor(); makeNoise(p.x, p.z, 4, 'player');
+}
+function leaveHide() { const p = S.hiding, e = findExit(p); S.hiding = null; S.holding = false; S.px = e[0]; S.pz = e[1]; sfxDoor(); }
+function updateHiding(dt) {
+  const want = held.has('Space') || touch.breath;
+  if (S.gasp > 0) { S.gasp -= dt; S.holding = false; }
+  else if (want && S.breath > 0) { S.holding = true; S.breath = Math.max(0, S.breath - 16 * dt); if (S.breath <= 0) { S.holding = false; S.gasp = 2.2; makeNoise(S.px, S.pz, 9, 'player'); sfxGasp(); } }
+  else { S.holding = false; S.breath = Math.min(100, S.breath + 22 * dt); }
+  S.yaw = clamp(S.yaw, S.hideYaw - 0.75, S.hideYaw + 0.75);
+}
+
+/* ---------- pickups, lanterns, bottles ---------- */
+function updatePickups(dt) {
+  pickups.forEach(p => {
+    if (p.taken) return;
+    p.mesh.rotation.y += dt * 1.5; p.mesh.position.y = (p.type === 'flame' ? p.y : p.type === 'battery' ? 0.35 : 0.3) + Math.sin(S.t * 2 + p.x) * 0.05; p.glow.position.copy(p.mesh.position);
+    if (Math.hypot(p.x - S.px, p.z - S.pz) < 1.5) {
+      if (p.type === 'flame') { S.flames.add(p.name); addCoins(15); sfxSting(1); say('The flame of ' + p.name + ', still burning. ' + S.flames.size + ' of 5.', 4500); if (S.flames.size === 5) { S.counted = true; sfxEnd(); setTimeout(() => say('Five flames. You are counted now. What is counted is kept.', 7000), 4600); } }
+      else if (p.type === 'battery') { S.battery = Math.min(100, S.battery + 45); say('A battery. The flashlight steadies.', 2200); addCoins(3); }
+      else if (S.bottles < 5) { S.bottles++; say('An empty bottle. Good for making noise somewhere else.', 2600); addCoins(3); } else return;
+      p.taken = true; p.mesh.visible = false; p.glow.visible = false; sfxPage();
+    }
+  });
+  lanterns.forEach(l => {
+    const near = Math.hypot(l.x - S.px, l.z - S.pz) < 3;
+    l.glow.material.opacity = (l.lit ? 1 : 0.8) * (0.85 + 0.15 * Math.sin(S.t * 3 + l.x));
+    if (near && S.ck.lantern !== l) {
+      let cx = l.x + 1.4, cz = l.z; if (blocked(cx, cz, 0.45)) { cx = l.x - 1.4; if (blocked(cx, cz, 0.45)) { cx = l.x; cz = l.z + 1.4; } }
+      S.ck = { x: cx, z: cz, yaw: S.yaw, lantern: l };
+      if (!l.lit) { l.lit = true; S.battery = Math.min(100, S.battery + 25); l.src.int = 1.2; l.src.r = 12; }
+      say('You light the lantern at ' + l.name + '. It will bring you back here.', 4200); sfxPage();
+    }
+  });
+}
+function throwBottle() {
+  if (S.mode !== 'play' || S.hiding || S.bottles <= 0) return;
+  S.bottles--; let x = S.px, z = S.pz; const dx = -Math.sin(S.yaw), dz = -Math.cos(S.yaw);
+  for (let d = 1; d <= 16; d += 0.5) { const nx = S.px + dx * d, nz = S.pz + dz * d; if (blocked(nx, nz, 0.15)) break; x = nx; z = nz; }
+  makeNoise(x, z, 17, 'thrown'); sfxShatter(x, z);
+  const g = glowSprite(0xcfe8ff, 3, 0.9); g.position.set(x, 0.6, z); scene.add(g); fx.push({ obj: g, t: 0.35 });
+}
+
+/* ---------- world update ---------- */
+function updateWorld(dt) {
+  updateTess(S.t);
+  clueObjs.forEach((c, i) => { c.grp.position.y = c.y + Math.sin(S.t * 1.6 + i) * 0.06; c.paper.rotation.z = S.t * 0.6 + i; });
+  doors.forEach(d => {
+    const tgt = d.open ? 1 : 0; d.anim += clamp(tgt - d.anim, -dt * 2.2, dt * 2.2);
+    d.mesh.position.y = d.h / 2 + d.anim * (d.h + 0.1); d.mesh.visible = d.anim < 0.99;
+  });
+  for (let i = fx.length - 1; i >= 0; i--) { fx[i].t -= dt; fx[i].obj.material.opacity = Math.max(0, fx[i].t * 2.5); if (fx[i].t <= 0) { scene.remove(fx[i].obj); fx.splice(i, 1); } }
+  towerRed.material.opacity = 0.35 + 0.65 * (Math.sin(S.t * 2.2) > 0.2 ? 1 : 0.1);
+  towerBeam.material.opacity = 0.35 + 0.15 * Math.sin(S.t * 3);
+  moon.position.set(camera.position.x - 110, camera.position.y + 80, camera.position.z - 140);
+  updateWatcher(dt);
+}
+
+/* ---------- player update ---------- */
+function updatePlayer(dt) {
+  if (S.battery > 0 && S.flash) S.battery = Math.max(0, S.battery - 0.55 * S.battMul * dt);
+  if (S.battery <= 0 && S.flash) { S.flash = false; say('The flashlight dies. The dark is the only thing left that is yours.', 4000); }
+  if (S.hiding) { S.moving = false; S.sprint = false; updateHiding(dt); }
+  else movePlayer(dt);
+  S.light = lightAt(S.px, S.pz);
+  // chapter transitions and triggers
+  if (S.chapter === 0) {
+    if (S.tutorialChase === 1 && cellOf(S.pz) >= OY + 29 && S.pz < (OY + 32) * CS && S.px > OFFX && S.px < OFFX + 160) leaveInstitute();
+    if (IDOORS.sealed.open && !S.tutorialChase && Math.hypot(S.px - (140 + OFFX), S.pz - (22 + OFFZ)) < 9) startTutorialChase();
+  } else if (S.chapter === 1 && S.memories >= 3 && !S.finale && !S.found && Math.hypot(S.px - TOWER.x, S.pz - TOWER.z) < 22) startFinale();
+  updatePickups(dt);
+}
+function updateCamera(dt) {
+  const target = S.hiding ? 1.35 : (S.crouch ? 1.05 : 1.65);
+  S.eye += (target - S.eye) * Math.min(1, dt * 9);
+  const bob = S.moving && S.mode === 'play' ? Math.sin(S.t * (S.sprint ? 13 : 8)) * (S.sprint ? 0.07 : 0.035) : 0;
+  const beat = S.fear > 0.15 ? Math.sin(S.t * (5 + S.fear * 5)) * 0.012 * S.fear : 0;
+  const sh = (SET.shake && S.shake > 0.01 ? S.shake : 0);
+  camera.position.set(S.px + (Math.random() - 0.5) * sh * 0.4, S.eye + S.jy + bob + beat + (Math.random() - 0.5) * sh * 0.4, S.pz + (Math.random() - 0.5) * sh * 0.4);
+  camera.rotation.set(S.pitch + (S.fear > 0.4 ? Math.sin(S.t * 1.7) * 0.004 : 0), S.yaw, S.hiding ? Math.sin(S.t * 0.9) * 0.01 : 0);
+  S.shake *= Math.pow(0.04, dt);
+  const fov = SET.fov - S.fear * 7; if (Math.abs(camera.fov - fov) > 0.05) { camera.fov += (fov - camera.fov) * Math.min(1, dt * 4); camera.updateProjectionMatrix(); }
+  flashlight.intensity = (S.flash && S.battery > 0 && S.mode !== 'menu') ? (S.battery < 12 ? 3.2 * (0.4 + 0.6 * (Math.sin(S.t * 31) > 0 ? 1 : 0.2)) : 3.2) : 0;
+}
+
+/* ---------- HUD ---------- */
+const HUD = { det: $('detFill'), detT: $('detTxt'), li: $('lightFill'), liT: $('lightTxt'), st: $('stamFill'), stT: $('stanceTxt'), ba: $('batFill'), baT: $('batTxt'), bo: $('bottleTxt'), fear: $('fear'), slats: $('slats'), vig: $('vig') };
+function updateHUD(dt) {
+  let maxA = 0, chasers = 0;
+  for (const g of guards) { if (!g.active) continue; if (g.state === 'chase') chasers++; const d = Math.hypot(g.x - S.px, g.z - S.pz); if (d < 45) maxA = Math.max(maxA, g.state === 'chase' ? 1 : g.alert); }
+  S.chasers = chasers; S.meter += (maxA - S.meter) * Math.min(1, dt * 6);
+  S.fear += (clamp(S.meter * 0.6 + (chasers ? 0.5 : 0) + (S.hiding ? 0.15 : 0), 0, 1) - S.fear) * Math.min(1, dt * 2.5);
+  HUD.det.style.width = Math.round(clamp(S.meter, 0, 1) * 100) + '%';
+  HUD.detT.textContent = chasers ? 'HUNTED' : S.meter > 0.7 ? 'Almost seen' : S.meter > 0.2 ? 'Suspected' : 'Unseen';
+  HUD.li.style.width = Math.round(S.light * 100) + '%';
+  HUD.liT.textContent = S.hiding ? 'Hiding' : S.light < 0.2 ? 'Hidden' : S.light < 0.45 ? 'Shadow' : S.light < 0.7 ? 'Lit' : 'Exposed';
+  HUD.st.style.width = Math.round((S.hiding ? S.breath : S.stamina)) + '%';
+  HUD.stT.textContent = S.hiding ? (S.gasp > 0 ? 'Gasping' : S.holding ? 'Holding' : 'Breath') : S.exhausted ? 'Winded' : S.crouch ? 'Crouched' : S.sprint ? 'Running' : 'Standing';
+  HUD.ba.style.width = Math.round(S.battery) + '%'; HUD.baT.textContent = S.battery <= 0 ? 'Dead' : S.flash ? 'On' : 'Off';
+  HUD.bo.textContent = S.bottles;
+  HUD.fear.style.opacity = (S.fear * (0.6 + 0.4 * Math.sin(S.t * (6 + S.fear * 6)))).toFixed(2);
+  HUD.slats.classList.toggle('on', !!S.hiding);
+  HUD.vig.style.opacity = S.hiding ? 0.4 : 1;
+  const t = S.mode === 'play' ? interactTarget() : null;
+  if (!t) setPrompt(null);
+  else if (t.type === 'leave') setPrompt('<kbd>E</kbd> Leave &nbsp; hold <kbd>Space</kbd> breath');
+  else if (t.type === 'hide') setPrompt('<kbd>E</kbd> Hide in the ' + t.ref.type);
+  else if (t.type === 'npc') setPrompt('<kbd>E</kbd> Talk to ' + t.ref.name);
+  else if (t.type === 'shop') setPrompt('<kbd>E</kbd> Trade at the lantern');
+  else if (t.type === 'clue') setPrompt('<kbd>E</kbd> ' + (S.read.has(t.ref.id) ? 'Read again' : 'Read the page'));
+  else setPrompt('<kbd>E</kbd> ' + (t.ref.locked ? 'Locked' : t.ref.open ? 'Close the door' : 'Open the door'));
+}
+/* ================= audio: everything you hear is a clue ================= */
+let AC = null, master = null, noiseBuf = null, chaseG = null, chaseO = null, windG = null;
+function initAudio() {
+  if (AC) { if (AC.state === 'suspended') AC.resume(); return; }
+  try {
+    AC = new (window.AudioContext || window.webkitAudioContext)();
+    master = AC.createGain(); master.gain.value = 0.9; master.connect(AC.destination);
+    noiseBuf = AC.createBuffer(1, AC.sampleRate * 2, AC.sampleRate); const d = noiseBuf.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+    const wn = AC.createBufferSource(); wn.buffer = noiseBuf; wn.loop = true;
+    const bp = AC.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = 340; bp.Q.value = 0.7;
+    windG = AC.createGain(); windG.gain.value = 0.05; wn.connect(bp); bp.connect(windG); windG.connect(master); wn.start();
+    const lfo = AC.createOscillator(); lfo.frequency.value = 0.09; const lg = AC.createGain(); lg.gain.value = 0.03; lfo.connect(lg); lg.connect(windG.gain); lfo.start();
+    const lp = AC.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 220; const dg = AC.createGain(); dg.gain.value = 0.05; lp.connect(dg); dg.connect(master);
+    [[46, 'sine'], [69.3, 'triangle']].forEach(a => { const o = AC.createOscillator(); o.type = a[1]; o.frequency.value = a[0]; o.connect(lp); o.start(); });
+    chaseG = AC.createGain(); chaseG.gain.value = 0; chaseG.connect(master);
+    chaseO = AC.createOscillator(); chaseO.type = 'sawtooth'; chaseO.frequency.value = 62; const cf = AC.createBiquadFilter(); cf.type = 'lowpass'; cf.frequency.value = 420; chaseO.connect(cf); cf.connect(chaseG); chaseO.start();
+    const c2 = AC.createOscillator(); c2.type = 'square'; c2.frequency.value = 93; c2.detune.value = 18; const c2g = AC.createGain(); c2g.gain.value = 0.4; c2.connect(c2g); c2g.connect(cf); c2.start();
+  } catch (e) { AC = null; }
+}
+function tone(f, dur, type, vol, when, slideTo, pan) {
+  if (!AC) return;
+  try {
+    const o = AC.createOscillator(), g = AC.createGain(), t0 = AC.currentTime + (when || 0); o.type = type || 'sine'; o.frequency.setValueAtTime(f, t0);
+    if (slideTo) o.frequency.exponentialRampToValueAtTime(slideTo, t0 + dur);
+    g.gain.setValueAtTime(0.0001, t0); g.gain.linearRampToValueAtTime(vol || 0.06, t0 + 0.015); g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+    let out = g; if (pan !== undefined && AC.createStereoPanner) { const p = AC.createStereoPanner(); p.pan.value = pan; g.connect(p); out = p; }
+    o.connect(g); out.connect(master); o.start(t0); o.stop(t0 + dur + 0.05);
+  } catch (e) { /* audio is optional */ }
+}
+function burst(dur, vol, type, freq, q, pan, when) {
+  if (!AC) return;
+  try {
+    const s = AC.createBufferSource(); s.buffer = noiseBuf; const f = AC.createBiquadFilter(); f.type = type; f.frequency.value = freq; f.Q.value = q || 1;
+    const g = AC.createGain(), t0 = AC.currentTime + (when || 0); g.gain.setValueAtTime(0.0001, t0); g.gain.linearRampToValueAtTime(vol, t0 + Math.min(0.03, dur / 3)); g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+    s.connect(f); f.connect(g); let out = g; if (pan !== undefined && AC.createStereoPanner) { const p = AC.createStereoPanner(); p.pan.value = pan; g.connect(p); out = p; }
+    out.connect(master); s.start(t0, Math.random()); s.stop(t0 + dur + 0.05);
+  } catch (e) { /* audio is optional */ }
+}
+function spatial(x, z) {
+  const dx = x - S.px, dz = z - S.pz, d = Math.hypot(dx, dz) || 1, rx = Math.cos(S.yaw), rz = -Math.sin(S.yaw);
+  return { vol: 1 / (1 + Math.pow(d / 5, 1.6)), pan: clamp((dx * rx + dz * rz) / d, -1, 1) * 0.9, d };
+}
+function stepSound(g) { const s = spatial(g.x, g.z); if (s.d > 40) return; const k = g.type === 'tall' ? 1.6 : 1; tone(g.type === 'tall' ? 70 : 95, 0.16, 'triangle', 0.22 * s.vol * k, 0, 45, s.pan); burst(0.07, 0.12 * s.vol * k, 'lowpass', 500, 1, s.pan); }
+const sfxStep = v => { burst(0.06, v, 'lowpass', 420, 1); };
+const sfxDoor = () => { burst(0.5, 0.07, 'lowpass', 600, 2); tone(95, 0.6, 'sawtooth', 0.03, 0, 60); };
+const sfxPage = () => { tone(900, 0.12, 'triangle', 0.03, 0, 400); tone(600, 0.15, 'sine', 0.03, 0.05, 300); };
+const sfxGasp = () => { burst(0.9, 0.18, 'highpass', 1800, 1); };
+const sfxWhisper = () => { const pan = Math.random() * 1.6 - 0.8; burst(2.2, 0.05, 'bandpass', 1900, 9, pan); burst(1.6, 0.04, 'bandpass', 2600, 12, -pan, 0.4); };
+function sfxShatter(x, z) { const s = spatial(x, z); burst(0.5, 0.35 * Math.max(0.3, s.vol), 'highpass', 2500, 1, s.pan); tone(2100, 0.4, 'triangle', 0.05 * Math.max(0.3, s.vol), 0, 900, s.pan); }
+function sfxSting(level) { tone(311, 1.1, 'sawtooth', 0.045, 0, 622); tone(330, 1.1, 'sawtooth', 0.045, 0, 660); if (level > 1) { tone(48, 1.6, 'sine', 0.2, 0, 30); burst(0.6, 0.12, 'bandpass', 900, 4); } }
+function sfxScare() { burst(1.4, 0.5, 'bandpass', 1400, 1.5); tone(55, 1.8, 'sine', 0.35, 0, 28); tone(220, 1.2, 'sawtooth', 0.12, 0, 700); }
+function sfxEnd() { [392, 523, 659, 784].forEach((f, i) => tone(f, 2.6, 'sine', 0.04, i * 0.4)); }
+let breathT = 0;
+function updateAudio(dt) {
+  if (!AC) return;
+  // chase layer rises with the nearest hunter
+  let near = 99; guards.forEach(g => { if (g.active && g.state === 'chase') near = Math.min(near, Math.hypot(g.x - S.px, g.z - S.pz)); });
+  chaseG.gain.setTargetAtTime(near < 99 ? 0.07 + Math.max(0, 0.08 * (1 - near / 30)) : 0, AC.currentTime, 0.25);
+  chaseO.frequency.setTargetAtTime(62 + (near < 99 ? Math.max(0, 30 - near) : 0), AC.currentTime, 0.3);
+  windG.gain.setTargetAtTime(S.chapter ? 0.07 : 0.03, AC.currentTime, 1);
+  // heartbeat, faster with fear
+  if (S.fear > 0.15 && S.mode !== 'menu') { S.beatT += dt; if (S.beatT > 1.2 - S.fear * 0.75) { S.beatT = 0; tone(58, 0.2, 'sine', 0.14 + S.fear * 0.1, 0, 38); tone(52, 0.2, 'sine', 0.09, 0.17, 36); } }
+  // ragged breathing when winded
+  if (S.exhausted || (S.sprint && S.stamina < 30)) { breathT += dt; if (breathT > 0.7) { breathT = 0; burst(0.35, 0.08, 'bandpass', 1100, 1.2); } }
+}
+/* ================= story, cards, flow ================= */
+const DOCS = [
+  { title: 'Night Desk Log', stamp: 'Meridian Institute · Lobby', lines: [
+    '14 NOV · 22:10 — Halloran, Dr. R. — IN. Lathe calibration, Hall 4.',
+    '14 NOV · 22:40 — Marrow, T. — IN. Custodial. Brought his ward again. Spoke to him twice about it.',
+    '14 NOV · 23:58 — Lathe test. Power spike. Floors 1 to 3 dark.',
+    '15 NOV · 00:20 — Marrow, T. reports child missing from the custodial closet. Search begun.',
+    '(the ink changes here, and so does the hand)',
+    'MARROW, O. Returning visitor. Reason for visit: I left a lantern here. Time out: ______'] },
+  { title: 'Incident Report 41-A', stamp: 'Records · Confidential', lines: [
+    'SUBJECT: Lyra Marrow, age 9 (the Institute’s records say “Odile”). Ward of T. Marrow, night custodian. Parent: Det. Echo, notified by phone.',
+    'Last seen entering Hall 4 during the Lathe test, apparently to retrieve a dropped lantern.',
+    'At 23:58 the Lathe cycled. The child was not recovered. Search party of fourteen. Result: negative.',
+    'NOTE FOR THE BOARD: the Lathe is not a door. Nothing left through it. Please stop writing that she slipped through. Nothing slipped.'],
+    margin: 'She didn’t go anywhere. We were looking in the wrong direction. — R.H.' },
+  { title: 'Bench Notes, Dr. Halloran', stamp: 'Laboratory · Hall 4 project', lines: [
+    'The Lathe projects a slice of our space along a fourth axis and records what stands there.',
+    'Frame 1: Hall 4, empty.', 'Frame 12: a girl, nine, holding a lantern.',
+    'Frame 40: the same girl, perhaps seventeen, reading on the floor of Hall 4.',
+    'Frame 211: the same girl, very old, sitting perfectly still.',
+    'I have checked the timestamps. They are not wrong. The fourth axis is not a place beside ours. It is the length of a life laid out flat, and she is standing in all of it at once.'],
+    margin: 'I have told no one. They would try to pull her out of the middle.' },
+  { title: 'Console Log: Retrieval', stamp: 'Control Room · Automated', lines: [
+    'ATTEMPT 1. Retrieval by power cycle. No change.',
+    'ATTEMPT 2. Retrieval by reversal. The Lathe returned nothing, because nothing had been taken.',
+    'ATTEMPT 3. Remote ping. A reply arrived before the ping was sent.',
+    'CONCLUSION. “Left” is the wrong verb. The subject is not outside the building. She is spread along its years.',
+    'ATTEMPT 41. Second presence in Hall 4. Elderly. Gray coat. Arrives at night, leaves before morning. The searchers walk straight past her.',
+    'RECOMMEND we stop calling this a rescue.'] },
+  { title: 'Crayon, on butcher paper', stamp: 'Staff nursery', kid: true, lines: [
+    'mr marrow says the dark is just the day with its eyes shut.',
+    'i wasnt scared. a lady sat with me in the dark. she wore a gray coat and smelled like peppermint and lantern oil.',
+    'she had a cut on her hand just like mine, same place.',
+    'she said youre going to be fine, i promise. i asked how she knew. she said, because i already was.',
+    'then she said it again slower, like she was telling herself.'] },
+  { title: 'Journal of T. Marrow', stamp: 'Boiler hall · Night custodian', lines: [
+    'I have stopped asking the Board. I light the lantern on the loading dock every night in case she finds her way back to it.',
+    'The searchers go past it. They are looking for something frightened and in a hurry. A child sitting beside the thing that keeps the lights on does not look like that.',
+    'Last night I saw the gray lady at the end of Hall 4. She stood with her hand over her mouth, looking at the closet door, crying the way people cry when they have already survived the thing.',
+    'She saw me. She said, “It’s the same lantern. I kept it.”',
+    'I did not ask who she was. I think I was afraid the answer would be kind.'] },
+  { title: 'Search Log, Hall 4', stamp: 'Atrium · The Lathe', lines: [
+    'NIGHT 1 OF 41. Fourteen searchers. Every room, every closet. No child.',
+    'The search did not end when the Institute did. The building replays the night. The searchers are still walking, still thorough, still certain.',
+    'FIELD NOTE. They respond to haste and to light. They were told to find a frightened child, so they look for frightened things. Stillness is invisible to them. Walk as if you have already arrived.',
+    'They have never once looked up the years.'] },
+  { title: 'Sermon Notes, Rev. Vane', stamp: 'Church of the Open Hand', lines: [
+    'The girl was seen at the lamp on Alder Street again. Four of my congregation say she is a child of about nine. Two say she is an old woman in a gray coat. All of them swear it is the same figure, at the same hour, lighting the same lamp.',
+    'I am a Vane, and my people were Vales before the bell. We changed the name and kept the lamps. I told them there is no contradiction. Time is the hand of God, and God does not hurry through it the way we do.',
+    'I leave the church unlocked now. Whoever she is, she keeps the lights on in a town that stopped paying for them.',
+    'The searchers pass every night, still looking for a frightened child. I have not found the courage to tell them there are so many of her.'] },
+  { title: 'Attendance Book, Room 4', stamp: 'Meridian Elementary', lines: [
+    'MARROW, ODILE. Absent. Absent. Absent. Present (8:14 a.m., seen by Mrs. Pell, approximately age 11, back row, left-handed, scar across the left palm).',
+    'MARROW, ODILE. Present (seen by the janitor, approximately age 16, standing in the hall at 3 a.m. holding a lantern).',
+    'Yearbook photograph: a smudge of light where a girl should be. The photographer says the camera was fine.'],
+    margin: 'I asked her once if she was lost. She said, no, I’m just early. — Mrs. Pell' },
+  { title: 'Order Pad, Booth 4', stamp: 'Tidewater Diner', lines: [
+    'Booth 4. Two coffees, one pie. The woman in the gray coat and the girl in the next booth never speak. They sit with their backs to each other. Both pay with the same worn coins.',
+    'Written on the back of a check, in a teenager’s hand:',
+    '“If anyone asks about the girl in the walls, tell them she’s fine. Tell them I’m fine. I keep coming back to this booth to sit across from myself. It helps to be looked at by someone who knows how it ends.”'] },
+  { title: 'Night Ward Chart, Pediatrics', stamp: 'Meridian Clinic', lines: [
+    'Children admitted overnight who would not sleep: 31. Children who slept after Nurse M. sat with them: 31.',
+    'Nurse M. is not on any staff roster. Her badge is a drawing of a lantern. She appears at all hours in every year of this ward’s records, including the years before it was built.',
+    'She told Dr. Ames, “I am practicing. There is one more night I have to get exactly right.”',
+    'I asked her which night. She said, the one where nobody sat with me. Then she corrected herself. She said, the one where I did.'] }
+];
+
+/* ---------- small UI helpers ---------- */
+let subT = 0, banT = 0, primaryBtn = null;
+function say(text, ms) { const n = $('sub'); n.textContent = text; n.classList.add('on'); clearTimeout(subT); subT = setTimeout(() => n.classList.remove('on'), ms || 4800); }
+function setPrompt(html) { const n = $('prompt'); if (html) { if (n.dataset.h !== html) { n.innerHTML = html; n.dataset.h = html; } n.classList.add('on'); } else n.classList.remove('on'); }
+function banner(txt, sub, ms) { $('bannerTxt').replaceChildren(document.createTextNode(txt)); if (sub) { const s = document.createElement('small'); s.textContent = sub; $('bannerTxt').append(s); } $('banner').classList.add('on'); clearTimeout(banT); banT = setTimeout(() => $('banner').classList.remove('on'), ms || 4200); }
+const el = (tag, cls, text) => { const n = document.createElement(tag); if (cls) n.className = cls; if (text != null) n.textContent = text; return n; };
+function showCard(spec) {
+  const card = $('card'); card.replaceChildren(); card.className = 'card' + (spec.cls ? ' ' + spec.cls : '');
+  if (spec.eyebrow) card.append(el('div', 'eyebrow', spec.eyebrow));
+  if (spec.title) card.append(el('h2', 'ctitle', spec.title));
+  (spec.lines || []).forEach(l => card.append(el('p', 'line' + (l.cls ? ' ' + l.cls : ''), l.t != null ? l.t : l)));
+  if (spec.text) card.append(el('p', 'copy', spec.text));
+  if (spec.small) card.append(el('p', 'copy dim', spec.small));
+  if (spec.list) { const ul = el('div', 'list'); spec.list.forEach(it => { const b = el('button', null, it.label); b.type = 'button'; b.disabled = !!it.disabled; if (it.onClick) b.addEventListener('click', it.onClick); ul.append(b); }); card.append(ul); }
+  const row = el('div', 'btns'); primaryBtn = null;
+  (spec.buttons || []).forEach((b, i) => { const bt = el('button', 'btn' + (b.quiet ? ' quiet' : ''), b.label); bt.type = 'button'; bt.addEventListener('click', () => { hideCard(); b.onClick && b.onClick(); }); row.append(bt); if (i === 0) primaryBtn = bt; });
+  if (spec.buttons && spec.buttons.length) card.append(row);
+  $('overlay').hidden = false;
+  try { if (document.pointerLockElement) document.exitPointerLock(); } catch (e) { /* ignore */ }
+  requestAnimationFrame(() => { const f = card.querySelector('button:not(:disabled)'); if (f) f.focus({ preventScroll: true }); });
+}
+function hideCard() { $('overlay').hidden = true; primaryBtn = null; }
+function relock() { if (matchMedia('(pointer: coarse)').matches) return; try { const p = canvas.requestPointerLock(); if (p && p.catch) p.catch(() => {}); } catch (e) { /* ignore */ } }
+function resume() { S.mode = 'play'; relock(); }
+function docLines(d) { const l = d.lines.map(t => (t.charAt(0) === '(' ? { t, cls: 'mood' } : { t })); if (d.margin) l.push({ t: d.margin, cls: 'margin' }); return l; }
+function refreshProgress() {
+  $('count').textContent = S.read.size + ' / ' + DOCS.length;
+  const o = $('objective');
+  if (S.chapter === 0) o.textContent = S.tutorialChase === 1 ? 'RUN. The loading dock is south of the boiler hall.' : (IDOORS.sealed.open ? 'The sealed door is open. Go east.' : 'Find any 3 pages (' + Math.min(3, [...S.read].filter(i => i < 7).length) + ' of 3). Keep out of the light.');
+  else if (S.finale) o.textContent = 'Do not run.';
+  else if (S.memories >= 3) o.textContent = 'A violet light stands over the water tower. Go in. Do not run.';
+  else o.textContent = 'Find where she was seen (' + S.memories + ' of 3 needed): church, school, diner, clinic. Any three, any order. Lanterns will bring you back. Optional: the five houses of the Oath keep a flame each (' + S.flames.size + ' of 5).';
+}
+function showDoc(i, back) {
+  const d = DOCS[i];
+  showCard({ cls: 'paper' + (d.kid ? ' kid' : ''), eyebrow: d.stamp, title: d.title, lines: docLines(d), buttons: back ? [{ label: 'Back', onClick: () => { S.mode = 'play'; openCaseFile(); } }, { label: 'Close', quiet: true, onClick: resume }] : [{ label: 'Put it back', onClick: () => afterDoc(i) }] });
+}
+function openCaseFile() {
+  if (S.mode !== 'play') return; S.mode = 'card';
+  showCard({ eyebrow: 'What you know', title: 'Case file', list: DOCS.map((d, i) => ({ label: S.read.has(i) ? d.title : '— not found yet —', disabled: !S.read.has(i), onClick: () => { hideCard(); showDoc(i, true); } })), buttons: [{ label: 'Close', onClick: resume }] });
+}
+function pause() {
+  if (S.mode !== 'play') return; S.mode = 'card';
+  showCard({ eyebrow: 'Paused', title: 'Hold still', text: 'Nothing out there moves while you are not looking. That is only a courtesy of the game.', buttons: [{ label: 'Resume', onClick: resume }] });
+}
+
+/* ---------- reading pages ---------- */
+function readClue(c) {
+  const id = c.id, first = !S.read.has(id);
+  S.read.add(id); S.mode = 'card'; sfxPage(); if (first) addCoins(10); S.hiding = null;
+  if (id < 7 && S.chapter === 0) S.ck = { x: S.px, z: S.pz, yaw: S.yaw };
+  if (first) { S.justRead = id; const o = clueObjs[clues.indexOf(c)]; o.beam.visible = false; o.glow.material.opacity = 0.12; o.paper.material.color.set(0x7a7766); }
+  refreshProgress(); showDoc(id);
+}
+function afterDoc(id) {
+  S.mode = 'play'; relock();
+  if (S.justRead !== id) return; S.justRead = -1;
+  if (id < 7) { if ([...S.read].filter(i => i < 7).length >= 3 && !IDOORS.sealed.open) openSealed(); }
+  else { S.memories++; refreshProgress(); triggerAmbush(poiList.find(p => p.id === ['church', 'school', 'diner', 'clinic'][id - 7])); if (S.memories === 2) { S.tallOn = true; } if (S.memories === 3) openTowerGate(); }
+}
+function openSealed() { IDOORS.sealed.locked = false; IDOORS.sealed.open = true; sfxDoor(); refreshProgress(); say('Enough of the night. Somewhere east, a door lets go.', 6500); }
+function openTowerGate() { IDOORS.gate.locked = false; IDOORS.gate.open = true; towerBeam.visible = true; sfxSting(2); say('Three pages is enough, if you are ready. A violet light stands up over the water tower and its gate is open. The fourth place can wait, or not.', 7000); refreshProgress(); }
+function triggerAmbush(poi) {
+  if (!poi) return;
+  const cx = (poi.inside[0] + poi.inside[2] / 2) * CS, cz = (poi.inside[1] + poi.inside[3] / 2) * CS;
+  bl.x = cx; bl.z = cz; bl.r = 30; bl.until = S.t + 26; S.shake = 0.7; sfxSting(2);
+  say('The lights die. The page was holding something shut.', 4500);
+  poi.spawns.forEach(sp => {
+    const g = guards.find(q => q.ambush && !q.active); if (!g) return;
+    g.x = sp[0] * CS; g.z = sp[1] * CS; g.state = 'chase'; g.alert = 1; g.last = [S.px, S.pz]; g.loseT = 0; g.hideKnown = null; g.spot = null; g.h = Math.atan2(S.px - g.x, S.pz - g.z); setActive(g, true); setPath(g, S.px, S.pz);
+  });
+}
+
+/* ---------- the tutorial chase, and leaving the Institute ---------- */
+function startTutorialChase() {
+  S.tutorialChase = 1; IDOORS.dock.locked = false; sfxSting(2); S.shake = 1;
+  bl.x = S.px; bl.z = S.pz; bl.r = 400; bl.until = S.t + 40;
+  guards.forEach(g => { if (g.zone === 'inst' && g.active) { g.state = 'chase'; g.alert = 1; g.last = [S.px, S.pz]; g.loseT = 0; setPath(g, S.px, S.pz); } });
+  say('The Lathe wakes. The night is replaying, and every searcher has turned toward you. Run. The loading dock is south of the boiler hall.', 8000);
+  refreshProgress();
+}
+function leaveInstitute() {
+  S.chapter = 1; S.tutorialChase = 2; DIFF.detect = SET.diff * 1.25; DIFF.chase = 5.9; bl.until = 0;
+  guards.forEach(g => { if (g.zone === 'inst') setActive(g, false); else if (g.zone === 'town' && !g.ambush && g !== tallOne) { resetGuard(g); setActive(g, true); } });
+  const l = lanterns[0]; l.lit = true; l.src.int = 1.2; S.ck = { x: l.x, z: l.z + 1.5, yaw: S.yaw, lantern: l }; S.battery = Math.min(100, S.battery + 25);
+  dirT = 45; refreshProgress();
+  banner('Meridian', '3 a.m. They are still looking.', 5500);
+  setTimeout(() => say('The town is lit like a held breath. Find where she was seen. Lanterns will bring you back.', 6500), 2500);
+}
+
+/* ---------- being caught ---------- */
+function catchPlayer(g, kind) {
+  if (S.mode !== 'play') return;
+  S.mode = 'caught'; g.state = 'grab'; guards.forEach(o => { o.speedNow = 0; });
+  const dx = g.x - S.px, dz = g.z - S.pz; S.hiding = null; S.holding = false; S.yaw = Math.atan2(-dx, -dz); S.pitch = 0.1;
+  sfxScare(); S.shake = 1.4; const f = $('flash'); f.style.transition = 'none'; f.style.opacity = 0.85; setTimeout(() => { f.style.transition = 'opacity 1.2s'; f.style.opacity = 0; }, 60);
+  $('darkTxt').textContent = kind === 'count' ? 'You looked away, and it was nearer. You looked back, and it was in the room.' : kind === 'hide' ? 'The door opens. The mask is very close, and it has been waiting a long time.' : 'It does not hurt. It is only very close and very cold, and then you are somewhere else.';
+  setTimeout(() => $('dark').classList.add('on'), 1100);
+  setTimeout(respawn, 4200);
+}
+function respawn() {
+  S.px = S.ck.x; S.pz = S.ck.z; S.yaw = S.ck.yaw; S.pitch = 0; S.meter = 0; S.fear = 0; S.stamina = 100; S.exhausted = false; S.crouch = false; S.deaths++;
+  const wasFinale = S.finale; S.finale = 0; bl.until = 0;
+  guards.forEach(g => { resetGuard(g); if (g.ambush || g === tallOne) setActive(g, false); else setActive(g, (S.chapter === 0 ? g.zone === 'inst' : g.zone === 'town')); });
+  if (S.chapter === 0 && S.tutorialChase === 1) { S.tutorialChase = 0; guards.forEach(g => { if (g.zone === 'inst') resetGuard(g); }); }
+  dirT = 30; $('dark').classList.remove('on'); S.mode = 'play'; mergeReset(false); refreshProgress();
+  say(wasFinale ? 'You wake at the gate. It is still there. Be still.' : 'You wake where you last felt safe. ' + (S.deaths > 2 ? 'It is learning how you move.' : 'They are walking again.'), 5000);
+}
+
+/* ---------- the stillness: the ending ---------- */
+function startFinale() {
+  S.finale = 1; S.finaleT = 0; S.hiding = null;
+  guards.forEach(g => { if (g !== tallOne) setActive(g, false); });
+  const c = nearestCell(cellOf(TOWER.x + 34), cellOf(TOWER.z + 2)); tallOne.x = wc(c[0]); tallOne.z = wc(c[1]); tallOne.path = []; tallOne.state = 'finale'; tallOne.fSpeed = 1.9; tallOne.recalc = 0; setActive(tallOne, true);
+  banner('Do not run', 'Stillness is invisible to them.', 6000); sfxSting(2); refreshProgress();
+}
+function updateFinale(dt) {
+  const g = tallOne, d = Math.hypot(g.x - S.px, g.z - S.pz);
+  if (S.finale === 1) {
+    g.recalc -= dt; if (g.recalc <= 0) { setPath(g, S.px, S.pz); g.recalc = 1; }
+    g.fSpeed = S.moving ? (d < 14 ? 6.8 : 3.4) : 1.9; S.fear = Math.max(S.fear, 0.5);
+    if (S.moving && d < 7) { catchPlayer(g, 'chase'); return; }
+    if (d < 2.6) { S.finale = 2; S.finaleT = 0; g.path = []; g.fSpeed = 0; say('It stops beside you. Every instinct you own is running. Stay.', 6000); S.shake = 0.5; }
+  } else if (S.finale === 2) {
+    S.finaleT += dt; g.h = Math.atan2(S.px - g.x, S.pz - g.z); S.fear = 1; S.shake = Math.max(S.shake, 0.08);
+    if (S.moving || S.sprint) { catchPlayer(g, 'chase'); return; }
+    if (S.finaleT > 9) finaleDone();
+  }
+}
+function finaleDone() {
+  S.finale = 3; S.mode = 'finale'; sfxEnd();
+  showCard({ cls: 'scene', eyebrow: 'The tower', lines: [
+    { t: 'It is as tall as the tower’s shadow and as thin as a held breath, and you know it before you can name it. It is the fear she left in the dark, grown tall on every night nobody sat with it.', cls: 'mood' },
+    { t: 'You tell yourself the thing you were told once, in a dark room: you are going to be fine. You already were.', cls: 'mood' },
+    { t: 'It kneels. It folds down the way something does when it has been standing too long. It gets small. It is nine years old and holding a lantern, and she is looking up at someone she has known all her life.', cls: 'mood' }],
+    buttons: [{ label: 'Look at her', onClick: finale1 }] });
+}
+function finale1() {
+  showCard({ cls: 'scene', eyebrow: 'Hall Four', lines: [
+    { t: '“You’re the gray lady.”', cls: 'her' }, { t: 'Yes.' }, { t: '“You’re late.”', cls: 'her' },
+    { t: '“Mr. Marrow says people who are late are never really late. They’re just somewhere else first.”', cls: 'her' }],
+    buttons: [{ label: 'Sit with her', onClick: () => finale2(false) }, { label: 'Tell her everything', onClick: () => finale2(true) }, { label: 'Say nothing. Hold the lantern', onClick: () => finale2(2) }] });
+}
+function finale2(tell) {
+  const lines = tell === 2 ? [
+    { t: 'You say nothing. You take the lantern from her hand, and she lets you, and the two of you hold it between you the way two people hold a rope.', cls: 'mood' },
+    { t: '\u201cYou don\u2019t have to say anything,\u201d she says. \u201cI already know how it goes.\u201d', cls: 'her' },
+    { t: 'She is right. You were always going to arrive. Nobody ever needed to be told.', cls: 'mood' }] : tell ? [
+    { t: 'You open your mouth to tell her all of it: every year, every door, the long way around. The whole of her life is right there in your throat.', cls: 'mood' },
+    { t: '“No.”', cls: 'her' }, { t: '“Then I’d only be walking toward it. Let me walk.”', cls: 'her' },
+    { t: 'And you understand the one thing the fourth dimension was ever trying to teach you: how to let someone walk.', cls: 'mood' }] : [
+    { t: 'You sit down on the cold ground beside her. Your knees complain. She leans her whole weight on your arm, the way she did once, with no idea who she is leaning on.', cls: 'mood' },
+    { t: '“Do I get out?”', cls: 'her' }, { t: 'A long time from now. The long way around. Every day of it is already lit.' },
+    { t: '“Okay.”', cls: 'her' }, { t: 'She holds the lantern up for both of you.', cls: 'mood' }];
+  showCard({ cls: 'scene', eyebrow: tell === 2 ? 'You hold the light' : tell ? 'You tell her' : 'You stay', lines, buttons: [{ label: 'Continue', onClick: finale3 }] });
+}
+function finale3() {
+  showCard({ cls: 'scene', eyebrow: 'The rumor, corrected', title: 'Hall Four', lines: [
+    { t: 'They said a girl slipped into the fourth dimension. She did not slip. She stayed in the one place that was not afraid, the middle of her own life.' },
+    { t: 'The searchers were never hunting a child. They were hunting fear, and fear was only ever a child in the dark who had not yet been sat beside.' },
+    { t: 'The comfort she remembered all her life, the gray coat, the peppermint, the promise, was herself.', cls: 'mood' },
+    ...(S.counted ? [{ t: 'All five flames came with you, so the Count walked you to the gate, and bowed, and did not look back.', cls: 'mood' }] : []),
+    { t: 'We are each other’s long-ago rescuers. Somewhere behind you, a small light has come on.' }],
+    buttons: [{ label: 'Walk out', onClick: resetAll }] });
+}
+function resetAll() {
+  S.read.clear(); S.memories = 0; S.chapter = 0; S.tutorialChase = 0; S.finale = 0; S.tallOn = false; S.deaths = 0; S.battery = 100; S.stamina = 100; S.bottles = 0; S.flash = true; S.hiding = null; S.crouch = false; S.meter = 0; S.fear = 0;
+  DIFF.detect = SET.diff; DIFF.chase = 5.1; bl.until = 0; towerBeam.visible = false;
+  doors.forEach(d => { d.open = false; d.anim = 0; d.locked = (d.tag === 'sealed' || d.tag === 'dock' || d.tag === 'tower-gate'); });
+  pickups.forEach(p => { p.taken = false; p.mesh.visible = true; p.glow.visible = true; });
+  lanterns.forEach(l => { l.lit = false; if (l.src) { l.src.int = 0.9; l.src.r = 9; } });
+  clueObjs.forEach(o => { o.beam.visible = true; o.glow.material.opacity = 0.75; o.paper.material.color.set(0xfff2c8); });
+  S.px = START.x; S.pz = START.z; S.yaw = START.yaw; S.pitch = 0; S.ck = { x: START.x, z: START.z, yaw: START.yaw };
+  guards.forEach(g => { resetGuard(g); setActive(g, g.zone === 'inst' && !g.ambush); });
+  mergeReset(true); refreshProgress(); introCard();
+}
+
+/* ---------- intro and start ---------- */
+function introCard() {
+  S.mode = 'menu'; refreshProgress();
+  showCard({ eyebrow: 'Meridian Institute · 3 a.m.', title: 'The Girl in the Walls', lines: [
+    { t: 'They say a girl named Lyra, called Odile in the Institute’s records, slipped into the fourth dimension, and that the building still remembers.' },
+    { t: 'The searchers are still looking. They do not hear well, but they see a hurry from far away and they never tire.', cls: 'mood' },
+    { t: 'Stay out of the light. Walk slowly near them, crouch to be quiet. Hide in lockers and under desks, and hold your breath when they come close. If one sees you, run, and break the line of sight.', cls: 'mood' },
+    { t: 'Headphones recommended. It is a horror game, and it means it.', cls: 'mood' }],
+    buttons: [{ label: 'Enter the Institute', onClick: startGame }] });
+}
+function startGame() {
+  initAudio(); applySettings(); S.mode = 'play'; S.t = 0; relock();
+  banner('Hall Four', 'Find any three pages.', 4500);
+  setTimeout(() => say('Move slowly. Crouch to be quiet. Find the pages.', 6000), 1500);
+  refreshProgress();
+}
+
+/* ---------- input ---------- */
+function toggleCrouch() { if (S.mode === 'play' && !S.hiding) S.crouch = !S.crouch; }
+function toggleFlash() { if (S.mode === 'play' && S.battery > 0) S.flash = !S.flash; }
+canvas.addEventListener('mousedown', e => { if (S.mode === 'play' && !document.pointerLockElement && !matchMedia('(pointer: coarse)').matches) relock(); });
+// touch controls
+(function () {
+  const stick = $('stick'), knob = $('knob'), pad = $('lookpad'); let sid = null, lid = null, lx = 0, ly = 0, sx = 0, sy = 0;
+  stick.addEventListener('pointerdown', e => { sid = e.pointerId; stick.setPointerCapture(sid); const r = stick.getBoundingClientRect(); sx = r.left + r.width / 2; sy = r.top + r.height / 2; move(e); });
+  const move = e => { const dx = clamp((e.clientX - sx) / 52, -1, 1), dy = clamp((e.clientY - sy) / 52, -1, 1); touch.x = dx; touch.y = -dy; touch.sprint = -dy > 0.95; knob.style.transform = 'translate(' + dx * 40 + 'px,' + dy * 40 + 'px)'; };
+  stick.addEventListener('pointermove', e => { if (e.pointerId === sid) move(e); });
+  const end = e => { if (e.pointerId !== sid) return; sid = null; touch.x = touch.y = 0; touch.sprint = false; knob.style.transform = ''; };
+  stick.addEventListener('pointerup', end); stick.addEventListener('pointercancel', end);
+  pad.addEventListener('pointerdown', e => { lid = e.pointerId; pad.setPointerCapture(lid); lx = e.clientX; ly = e.clientY; });
+  pad.addEventListener('pointermove', e => { if (e.pointerId !== lid || S.mode !== 'play') return; S.yaw -= (e.clientX - lx) * 0.0058 * SET.sens; S.pitch = clamp(S.pitch - (e.clientY - ly) * 0.0058 * SET.sens * (SET.invert ? -1 : 1), -1.2, 1.2); lx = e.clientX; ly = e.clientY; });
+  const lend = e => { if (e.pointerId === lid) lid = null; }; pad.addEventListener('pointerup', lend); pad.addEventListener('pointercancel', lend);
+  $('tE').addEventListener('click', () => interact()); $('tC').addEventListener('click', toggleCrouch); $('tF').addEventListener('click', toggleFlash); $('tG').addEventListener('click', () => throwBottle());
+  const tb = $('tB'); tb.addEventListener('pointerdown', () => { touch.breath = true; }); ['pointerup', 'pointercancel', 'pointerleave'].forEach(n => tb.addEventListener(n, () => { touch.breath = false; }));
+})();
+$('caseBtn').addEventListener('click', openCaseFile); $('pauseBtn').addEventListener('click', () => pause());
+
+/* ---------- resize and main loop ---------- */
+function resize() { const w = Math.max(2, stage.clientWidth), h = Math.max(2, stage.clientHeight); renderer.setSize(w, h, false); camera.aspect = w / h; camera.updateProjectionMatrix(); }
+addEventListener('resize', resize); if (window.ResizeObserver) new ResizeObserver(resize).observe(stage); resize();
+
+let last = performance.now();
+function frame(now) {
+  requestAnimationFrame(frame);
+  const dt = Math.min(0.05, (now - last) / 1000); last = now;
+  try {
+    const live = S.mode === 'play' || S.mode === 'caught';
+    if (S.mode === 'play') {
+      S.t += dt;
+      updatePlayer(dt);
+      if (S.mode === 'play') guards.forEach(g => { if (g.active && S.mode === 'play') updateGuard(g, dt); });
+      if (S.mode === 'play' && S.finale > 0 && S.finale < 3) updateFinale(dt);
+      updateDirector(dt); updateDoorHint(dt); updateMerge(dt); updateExtras(dt);
+    } else if (S.mode === 'caught') { S.t += dt; }
+    if (live || S.mode === 'menu' || S.mode === 'card' || S.mode === 'finale') { if (S.mode !== 'menu') updateWorld(live ? dt : 0); }
+    updateLights(S.px, S.pz, S.t, dt);
+    if (S.mode === 'play' || S.mode === 'caught') updateAudio(dt);
+    updateHUD(dt); updateCamera(dt);
+    renderFrame();
+  } catch (err) { console.error(err); }
+}
+
+/* ================= menus, settings, rebindable keys ================= */
+const ACTIONS = [
+  ['forward', 'Move forward', 'KeyW'], ['back', 'Move back', 'KeyS'], ['left', 'Step left', 'KeyA'], ['right', 'Step right', 'KeyD'],
+  ['sprint', 'Run', 'ShiftLeft'], ['crouch', 'Crouch', 'KeyC'], ['flash', 'Flashlight', 'KeyF'], ['interact', 'Use / hide / door', 'KeyE'],
+  ['throw', 'Throw bottle', 'KeyG'], ['breath', 'Hold breath (hiding)', 'Space'], ['casefile', 'Case file', 'KeyJ']
+];
+const DEFBIND = {}; ACTIONS.forEach(a => { DEFBIND[a[0]] = a[2]; });
+const DEFSET = { sens: 1, vol: 0.9, fov: 74, invert: false, shake: true, diff: 0.8 };
+const SET = Object.assign({}, DEFSET); let BIND = Object.assign({}, DEFBIND);
+try { const s = JSON.parse(localStorage.getItem('hf-settings') || 'null'); if (s) Object.keys(DEFSET).forEach(k => { if (typeof s[k] === typeof DEFSET[k]) SET[k] = s[k]; }); const b = JSON.parse(localStorage.getItem('hf-binds') || 'null'); if (b) Object.keys(DEFBIND).forEach(k => { if (typeof b[k] === 'string') BIND[k] = b[k]; }); } catch (e) { /* storage optional */ }
+function saveCfg() { try { localStorage.setItem('hf-settings', JSON.stringify(SET)); localStorage.setItem('hf-binds', JSON.stringify(BIND)); } catch (e) { /* ignore */ } }
+function applySettings() { if (master) master.gain.value = SET.vol; if (S.chapter === 0 && !S.tutorialChase) DIFF.detect = SET.diff * 0.55; saveCfg(); }
+const KEYNAMES = { ShiftLeft: 'Shift', ShiftRight: 'R-Shift', Space: 'Space', ArrowUp: '↑', ArrowDown: '↓', ArrowLeft: '←', ArrowRight: '→', ControlLeft: 'Ctrl', AltLeft: 'Alt', Tab: 'Tab', Enter: 'Enter', Backquote: '`' };
+const keyName = c => KEYNAMES[c] || c.replace(/^Key/, '').replace(/^Digit/, '').replace(/^Numpad/, 'Num ');
+function actionOf(code) { for (const k in BIND) if (BIND[k] === code) return k; return null; }
+function refreshKeyHint() {
+  const k = n => '<kbd>' + keyName(BIND[n]) + '</kbd>';
+  $('hint').innerHTML = k('forward') + k('left') + k('back') + k('right') + ' move &nbsp; ' + k('sprint') + ' run &nbsp; <kbd>Space</kbd> jump &nbsp; ' + k('crouch') + ' crouch &nbsp; ' + k('flash') + ' flashlight &nbsp; ' + k('interact') + ' use &nbsp; ' + k('throw') + ' throw &nbsp; hold ' + k('breath') + ' breath &nbsp; ' + k('casefile') + ' case file &nbsp; <kbd>Esc</kbd> pause';
+}
+const st = document.createElement('style');
+st.textContent = '.card.menu{max-width:560px}.mrow{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;align-items:center;width:100%;padding:8px 0;border-bottom:1px solid var(--edge);font-family:var(--mono);font-size:12px;letter-spacing:.05em}.mrow label,.mrow span.l{color:var(--fg)}.mrow input[type=range]{width:min(200px,42vw);accent-color:var(--amber)}.mrow select{font:inherit;color:var(--fg);background:var(--panel);border:1px solid var(--edge);padding:6px}.mrow .v{color:var(--muted);margin-left:8px}.kb{min-width:92px;min-height:36px;font-family:var(--mono);font-size:12px;color:var(--amber);background:transparent;border:1px solid var(--edge);cursor:pointer}.kb.cap{border-color:var(--amber);background:rgba(232,166,60,.15)}.menulist{display:grid;gap:10px;width:100%;margin-top:6px}.menulist .btn{width:100%;text-align:left}.mscroll{width:100%;max-height:min(52vh,420px);overflow:auto;padding-right:6px}';
+document.head.append(st);
+function menuCard(eyebrow, title, build, buttons) {
+  S.menuBack = buttons;
+  showCard({ cls: 'menu', eyebrow, title }); const card = $('card'); build(card);
+  const row = el('div', 'btns'); buttons.forEach((b, i) => { const bt = el('button', 'btn' + (b.quiet ? ' quiet' : ''), b.label); bt.type = 'button'; bt.addEventListener('click', b.onClick); row.append(bt); if (i === 0) setTimeout(() => bt.focus({ preventScroll: true }), 30); }); card.append(row);
+}
+function menuButtons(items) { const w = el('div', 'menulist'); items.forEach(it => { const b = el('button', 'btn', it[0]); b.type = 'button'; b.addEventListener('click', it[1]); w.append(b); }); return w; }
+
+/* ---------- main and pause menus ---------- */
+function introCard() { introMain(); }
+function pause() {
+  if (S.mode !== 'play') return; S.mode = 'card';
+  menuCard('Paused', 'Hold still', c => {
+    c.append(el('p', 'copy dim', 'Nothing out there moves while you are not looking. That is only a courtesy of the game.'));
+    c.append(menuButtons([['Resume', resumeFromMenu], ['Case file', () => { S.mode = 'play'; openCaseFile(); }], ['Controls', () => controlsCard(pauseAgain)], ['Settings', () => settingsCard(pauseAgain)], ['Return to last safe spot', () => { if (confirmAgain('Return to your last safe spot? Searchers reset.')) { hideCard(); S.mode = 'caught'; respawn(); relock(); } }], ['Quit to main menu', () => { if (confirmAgain('Quit to the main menu? Progress is lost.')) resetAll(); }]]));
+  }, []);
+}
+function skipTutorial() { startGame(); S.px = (OX + 24.5) * CS; S.pz = (OY + 30.5) * CS; S.tutorialChase = 1; IDOORS.dock.locked = false; leaveInstitute(); S.ck = Object.assign({}, S.ck, { x: S.px, z: S.pz }); }
+function pauseAgain() { S.mode = 'play'; pause(); }
+function resumeFromMenu() { hideCard(); resume(); }
+let confirmT = 0, confirmMsg = '';
+function confirmAgain(msg) { if (confirmMsg === msg && S.t + performance.now() / 1000 - confirmT < 4) { confirmMsg = ''; return true; } confirmMsg = msg; confirmT = S.t + performance.now() / 1000; say(msg + ' Press again to confirm.', 3500); return false; }
+function howTo(back) {
+  menuCard('How to play', 'Stay unseen', c => {
+    ['Searchers see light and hurry. Crouch, go slow, and stay in shadow.', 'Noise travels. Running and doors are loud; crouching is nearly silent.', 'If one sees you, run and break line of sight, then hide: lockers, desks, beds. Hold your breath when they come close.', 'Throw a bottle to pull them away. Flashlight is optional: it helps you see but costs battery and gives you away.', 'Read every page. The truth is in the order you find it.'].forEach(t => c.append(el('p', 'copy', t)));
+  }, [{ label: 'Back', onClick: back }]);
+}
+
+/* ---------- settings ---------- */
+function slider(c, label, key, min, max, step, fmt) {
+  const r = el('div', 'mrow'), l = el('label', null, label), w = el('div'); const i = el('input'); i.type = 'range'; i.min = min; i.max = max; i.step = step; i.value = SET[key]; const v = el('span', 'v', fmt(SET[key]));
+  i.setAttribute('aria-label', label); i.addEventListener('input', () => { SET[key] = +i.value; v.textContent = fmt(SET[key]); applySettings(); });
+  w.append(i, v); r.append(l, w); c.append(r);
+}
+function toggleRow(c, label, key) {
+  const r = el('div', 'mrow'), l = el('span', 'l', label), b = el('button', 'kb', SET[key] ? 'On' : 'Off'); b.type = 'button'; b.setAttribute('aria-pressed', SET[key]);
+  b.addEventListener('click', () => { SET[key] = !SET[key]; b.textContent = SET[key] ? 'On' : 'Off'; b.setAttribute('aria-pressed', SET[key]); applySettings(); }); r.append(l, b); c.append(r);
+}
+function settingsCard(back) {
+  menuCard('Settings', 'Settings', c => {
+    const box = el('div', 'mscroll');
+    slider(box, 'Look sensitivity', 'sens', 0.3, 2.5, 0.05, v => v.toFixed(2) + '×');
+    slider(box, 'Volume', 'vol', 0, 1, 0.05, v => Math.round(v * 100) + '%');
+    slider(box, 'Field of view', 'fov', 60, 100, 1, v => v + '°');
+    toggleRow(box, 'Invert vertical look', 'invert'); toggleRow(box, 'Camera shake', 'shake');
+    const r = el('div', 'mrow'), l = el('label', null, 'Difficulty'), s = el('select'); [['Forgiving', 0.6], ['Normal', 0.8], ['Brutal', 1.05]].forEach(o => { const op = el('option', null, o[0]); op.value = o[1]; if (Math.abs(SET.diff - o[1]) < 0.01) op.selected = true; s.append(op); });
+    s.addEventListener('change', () => { SET.diff = +s.value; if (S.chapter === 1) DIFF.detect = SET.diff * 1.25; applySettings(); }); l.append(); r.append(l, s); box.append(r); c.append(box);
+    c.append(el('p', 'copy dim', 'Difficulty changes how quickly searchers notice you. Settings are saved on this device.'));
+  }, [{ label: 'Back', onClick: back }, { label: 'Reset to defaults', quiet: true, onClick: () => { Object.assign(SET, DEFSET); applySettings(); settingsCard(back); } }]);
+}
+
+/* ---------- rebindable keys ---------- */
+let capturing = null;
+function controlsCard(back) {
+  capturing = null; S.ctlBack = back;
+  menuCard('Controls', 'Controls', c => {
+    const box = el('div', 'mscroll');
+    ACTIONS.forEach(a => {
+      const r = el('div', 'mrow'), l = el('span', 'l', a[1]), b = el('button', 'kb', keyName(BIND[a[0]])); b.type = 'button'; b.setAttribute('aria-label', 'Rebind ' + a[1] + ', currently ' + keyName(BIND[a[0]]));
+      b.addEventListener('click', () => { if (capturing) capturing.btn.classList.remove('cap'); capturing = { act: a[0], btn: b }; b.textContent = 'Press a key…'; b.classList.add('cap'); });
+      r.append(l, b); box.append(r);
+    });
+    c.append(box); c.append(el('p', 'copy dim', 'Click an action, then press the new key. Esc cancels. Arrow keys always also move. Mouse looks; click the game to capture the pointer.'));
+  }, [{ label: 'Back', onClick: () => { capturing = null; back(); } }, { label: 'Reset keys', quiet: true, onClick: () => { BIND = Object.assign({}, DEFBIND); saveCfg(); refreshKeyHint(); controlsCard(back); } }]);
+}
+function rebind(code) {
+  const { act, btn } = capturing; capturing = null; btn.classList.remove('cap');
+  if (code === 'Escape') { btn.textContent = keyName(BIND[act]); return; }
+  const other = actionOf(code); if (other && other !== act) BIND[other] = BIND[act];
+  BIND[act] = code; saveCfg(); refreshKeyHint();
+  controlsCard(S.ctlBack || introCard);
+}
+
+/* ---------- keyboard routing ---------- */
+const DEFCODES = new Set(Object.values(DEFBIND)); const ITEMACT = {};
+addEventListener('keydown', e => {
+  if (capturing) { e.preventDefault(); e.stopPropagation(); rebind(e.code); return; }
+  if (e.repeat) { if (S.mode === 'play' && (actionOf(e.code) || e.code.startsWith('Arrow'))) e.preventDefault(); return; }
+  if (S.mode === 'card' && e.code === 'Escape' && !$('overlay').hidden) { const q = $('card').querySelector('.btn.quiet'), bk = S.menuBack && S.menuBack[0]; if (bk) bk.onClick(); else if (q) q.click(); else if ($('card').textContent.indexOf('Hold still') >= 0) resumeFromMenu(); return; }
+  if (S.mode !== 'play') return;
+  const act = actionOf(e.code);
+  if (act || e.code.startsWith('Arrow') || e.code === 'ShiftRight') e.preventDefault();
+  if (act) held.add(DEFBIND[act]); else if (!DEFCODES.has(e.code)) held.add(e.code);
+  if (act === 'interact') interact(); else if (act === 'crouch') toggleCrouch(); else if (act === 'flash') toggleFlash(); else if (act === 'throw') throwBottle(); else if (act === 'casefile') openCaseFile(); else if (act && ITEMACT[act]) ITEMACT[act]();
+  else if (e.code === 'Escape') pause();
+});
+addEventListener('keyup', e => { const act = actionOf(e.code); if (act) held.delete(DEFBIND[act]); held.delete(e.code); });
+addEventListener('blur', () => { held.clear(); touch.x = touch.y = 0; touch.sprint = touch.breath = false; if (S.mode === 'play') pause(); });
+document.addEventListener('pointerlockchange', () => { if (!document.pointerLockElement && S.mode === 'play' && !matchMedia('(pointer: coarse)').matches) pause(); });
+document.addEventListener('mousemove', e => {
+  if (S.mode !== 'play' || document.pointerLockElement !== canvas) return;
+  S.yaw -= e.movementX * 0.0022 * SET.sens; S.pitch = clamp(S.pitch - e.movementY * 0.0022 * SET.sens * (SET.invert ? -1 : 1), -1.2, 1.2);
+});
+/* ---------- subtle hint toward the unsealed door ---------- */
+let hintSpr = null, hintT = 0;
+function updateDoorHint(dt) {
+  const d = IDOORS.sealed, on = d.open && !S.tutorialChase && S.chapter === 0 && S.mode === 'play';
+  if (!hintSpr) { hintSpr = glowSprite(0xb99aff, 6, 0, false); hintSpr.position.set(d.x, 2.2, d.z); scene.add(hintSpr); }
+  const near = Math.hypot(S.px - d.x, S.pz - d.z) < 14;
+  hintSpr.material.opacity += ((on && !near ? 0.16 + 0.14 * Math.sin(S.t * 1.8) : 0) - hintSpr.material.opacity) * Math.min(1, dt * 3);
+  hintSpr.visible = hintSpr.material.opacity > 0.005;
+  if (on && !near) { hintT -= dt; if (hintT <= 0) { hintT = 9; const sp = spatial(d.x, d.z); tone(196, 1.6, 'sine', 0.035 * Math.max(0.25, sp.vol), 0, 174, sp.pan); tone(294, 1.8, 'sine', 0.02 * Math.max(0.25, sp.vol), 0.15, 262, sp.pan); } }
+}
+refreshKeyHint(); introCard(); requestAnimationFrame(frame);
+/* ================= merged from the Big Randy / Hollowmere games =================
+   The Count (moves only when unseen), hounds (hear), shades (hate light), classes, coins, shop, items, lore */
+S.coins = 0; S.charm = 0; S.charms = 0; S.smoke = 0; S.whistle = 0; S.speedMul = 1; S.battMul = 1; S.cls = 'wanderer';
+
+/* ---------- classes ---------- */
+const CLASSES = [
+  ['keeper', 'Lantern-keeper', 'Years of tending flames. The flashlight battery lasts twice as long.'],
+  ['warded', 'Warded', 'You start with one ward charm: vanish from the dark for 20 seconds.'],
+  ['swift', 'Swift', 'You learned to run early. Move 10% faster.'],
+  ['wanderer', 'Wanderer', 'You travel light and pick things up. Start with 30 coins and 2 bottles.']
+];
+function applyClass(id) {
+  S.cls = id; S.battMul = id === 'keeper' ? 0.5 : 1; S.speedMul = id === 'swift' ? 1.1 : 1; S.charms = id === 'warded' ? 1 : 0; S.coins = id === 'wanderer' ? 30 : 0; S.bottles = id === 'wanderer' ? 2 : 0;
+  S.smoke = 0; S.whistle = 0; S.charm = 0;
+}
+function classCard(next) {
+  menuCard('Before you go in', 'How did you survive?', c => {
+    c.append(el('p', 'copy dim', 'You have walked these years a long time. One habit carried you.'));
+    c.append(menuButtons(CLASSES.map(k => [k[1] + ': ' + k[2], () => { applyClass(k[0]); next(); }])));
+  }, [{ label: 'Back', quiet: true, onClick: introCard }]);
+}
+
+/* ---------- wallet, items, shop ---------- */
+const walletEl = el('span', null, ''); walletEl.style.cssText = 'display:block;margin-top:4px;opacity:.9'; $('bottleTxt').parentNode.append(walletEl);
+function addCoins(n) { S.coins += n; if (n > 0) say('+' + n + ' coins', 1200); }
+function hudWallet() { walletEl.textContent = 'Coins ' + S.coins + ' · [' + keyName(BIND.item1) + '] Smoke ' + S.smoke + ' [' + keyName(BIND.item2) + '] Whistle ' + S.whistle + ' [' + keyName(BIND.item3) + '] Charm ' + S.charms; }
+const SHOP = [
+  ['Battery', 18, () => { S.battery = Math.min(100, S.battery + 45); }, 'Refills 45% of the flashlight.'],
+  ['Two bottles', 10, () => { S.bottles = Math.min(5, S.bottles + 2); }, 'Noise to throw somewhere else.'],
+  ['Smoke bomb', 28, () => { S.smoke++; }, 'Stuns what is nearest, 8 seconds.'],
+  ['Whistle', 30, () => { S.whistle++; }, 'Everything hunting you loses interest.'],
+  ['Ward charm', 16, () => { S.charms++; }, 'Vanish from the dark for 20 seconds. The Count still counts you.'],
+  ['Swift boots', 35, () => { S.speedMul += 0.08; }, '+8% speed, for good.'],
+  ['Tonic', 20, () => { S.stamina = 100; S.exhausted = false; }, 'Fills your stamina.']
+];
+function openShop(l, stock, ttl) {
+  S.mode = 'card';
+  const build = () => menuCard(stock ? l.name : 'The lantern at ' + l.name, ttl || 'A little oil, a little trade', c => {
+    c.append(el('p', 'copy dim', 'You have ' + S.coins + ' coins. A box of supplies sits by the lantern, left for whoever comes next.'));
+    const w = el('div', 'menulist');
+    SHOP.filter(it => !stock || stock.indexOf(it[0]) >= 0).forEach(it => { const b = el('button', 'btn', it[0] + ' — ' + it[1] + ' coins. ' + it[3]); b.type = 'button'; b.disabled = S.coins < it[1]; b.addEventListener('click', () => { if (S.coins < it[1]) return; S.coins -= it[1]; it[2](); sfxPage(); build(); }); w.append(b); });
+    c.append(w);
+  }, [{ label: 'Leave', onClick: resumeFromMenu }]);
+  build();
+}
+function nearbyEntity(r) { let best = null, bd = r; allEnts().forEach(e => { if (!e.on) return; const d = Math.hypot(e.x - S.px, e.z - S.pz); if (d < bd) { bd = d; best = e; } }); guards.forEach(g => { if (!g.active || g.ambush) return; const d = Math.hypot(g.x - S.px, g.z - S.pz); if (d < bd) { bd = d; best = g; } }); return best; }
+function calmAll() {
+  guards.forEach(g => { if (g.active && (g.state === 'chase' || g.state === 'investigate')) { g.state = g.type === 'tall' ? 'hunt' : 'patrol'; g.alert = 0; g.path = []; g.last = null; g.loseT = 0; } });
+  hounds.concat(shades).forEach(e => { if (e.state === 'hunt') { e.state = 'wander'; e.path = []; } });
+}
+const ITEMUSE = {
+  item1() { if (S.smoke <= 0) return say('No smoke bombs.', 1500); const e = nearbyEntity(18); if (!e) return say('Nothing close enough to choke.', 1800); S.smoke--; e.stunT = 8; say('The smoke rolls. It staggers.', 2500); sfxShatter(S.px, S.pz); },
+  item2() { if (S.whistle <= 0) return say('No whistle.', 1500); S.whistle--; calmAll(); burst(0.9, 0.3, 4200, 4, 'bandpass'); tone(2400, 0.7, 'sine', 0.06, 0, 1900); say('One shrill blast. They lose interest.', 3000); },
+  item3() { if (S.charms <= 0) return say('No ward charm.', 1500); if (S.charm > 0) return; S.charms--; S.charm = 20; calmAll(); say('The dark leans in and does not see you. 20 seconds.', 3500); }
+};
+ACTIONS.push(['item1', 'Use smoke bomb', 'Digit1'], ['item2', 'Use whistle', 'Digit2'], ['item3', 'Use ward charm', 'Digit3']);
+['item1', 'item2', 'item3'].forEach((k, i) => { DEFBIND[k] = 'Digit' + (i + 1); if (!BIND[k]) BIND[k] = DEFBIND[k]; DEFCODES.add(DEFBIND[k]); ITEMACT[k] = ITEMUSE[k]; });
+{ const b = el('button', null, 'Item'); b.type = 'button'; b.addEventListener('click', () => { if (S.mode !== 'play') return; if (S.smoke > 0 && nearbyEntity(18)) ITEMUSE.item1(); else if (S.charms > 0) ITEMUSE.item3(); else if (S.whistle > 0) ITEMUSE.item2(); else say('No items.', 1200); }); document.querySelector('.tbtns').append(b); }
+
+/* ---------- lore ---------- */
+DOCS.push(
+  { title: 'How the Count works', stamp: 'Church ledger · loose leaf', lines: ['Every dusk it walks the lane and counts the houses by their light. A lit window is a counted house, and it cannot take what it has counted.', 'Anyone who arrives after dark is uncounted. That rule is older than the village. The lanterns are the last counted places in Meridian.'] },
+  { title: 'Do not stare', stamp: 'Watch log', lines: ['It moves when you are not looking, and only then. Look away, move, look back: it is always nearer.', 'But stare too long and it comes for you. The ones who stared are in the churchyard now, standing very straight. Walls do not stop it. Only a counted light does.'] },
+  { title: 'The kennel ledger', stamp: 'Warden’s yard', lines: ['Six dogs, bred to be blind. Nobody told us what they were for. They hear a boot on gravel from two streets away.', 'Sit still and they lose you. Run and they will never lose you again. A thrown bottle is worth a week’s wages.'] },
+  { title: 'Note on a lamp-post', stamp: 'Nailed up, in pencil', lines: ['Not everything in the dark is a person. Some of it only wants the dark.', 'The shades will not cross a lit street, and they hate a beam of light more than anything. But the wardens are drawn to that same beam. Pick which of them you would rather meet.'] },
+  { title: 'The Oath of the Count', stamp: 'Cut into the gate post', lines: ['Sworn at this well in the winter of 1874 by the Five Families: Vale, Hendry, Marsh, Orme, Tolliver. Light a flame at dusk in every house. What is counted is kept. What is kept is not taken.', 'Carried to Meridian in 1911 by the families who walked out of Hollowmere after the bell. They brought the lamps. They did not bring the village.'] },
+  { title: 'Left on a pew', stamp: 'Church of the Open Hand', lines: ['If you are reading this, something has you in its count. Find where she was seen. Light the lanterns. Whoever it counts, it remembers your number for the rest of your life.', 'Go now. It is patient.'] }
+);
+DOCS.push(
+  { title: 'Case Note, Det. Echo', stamp: 'Unfiled · handwritten', lines: ['She is my daughter. Her name is Lyra. The Institute wrote “Odile” on everything, and I have stopped correcting them.', 'Everyone says the Lathe took her. The Lathe took nothing. I have read every page in this building, and I think I am being asked to stop looking in the wrong direction.', 'I will keep the case open. Someone has to be the person who keeps coming back.'] },
+  { title: 'Statement of A. Ward, age 9', stamp: 'Custodial closet · folded small', lines: ['I was with Lyra that night. She went back for the lantern because it was Mr. Marrow’s and she said she would be one minute.', 'Luca stayed by the door. He says he will be a detective like her mom when he grows up. He wrote down the time on his arm: 23:58.', 'I did not tell anyone I saw the hall go long, like a hallway in a mirror. They would say I made it up. I did not.'] }
+);
+function grantDoc(id) { if (S.read.has(id)) return; S.read.add(id); refreshProgress(); sfxPage(); say('A page slips from the dark into your pocket: ' + DOCS[id].title + '.', 4500); }
+
+/* ---------- shared entity helpers ---------- */
+const M_BLACK = new THREE.MeshLambertMaterial({ color: 0x0a0807 }), M_PALE = new THREE.MeshBasicMaterial({ color: 0xa8aa9d }), M_EYE = new THREE.MeshBasicMaterial({ color: 0xff2a1a }), M_WHITE = new THREE.MeshBasicMaterial({ color: 0xe8f4ff });
+const bx = (g, w, h, d, x, y, z, m) => { const q = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), m || M_BLACK); q.position.set(x, y, z); g.add(q); return q; };
+function walk(e, dt, speed) {
+  const p = e.path; if (!p || e.pi >= p.length) return true;
+  const w = p[e.pi], dx = w[0] - e.x, dz = w[1] - e.z, d = Math.hypot(dx, dz);
+  if (d < 0.7) { e.pi++; return e.pi >= p.length; }
+  const st = Math.min(d, speed * dt); e.x += dx / d * st; e.z += dz / d * st; e.h = Math.atan2(dx, dz); return false;
+}
+function entPath(e, tx, tz) { e.path = pathTo(e.x, e.z, tx, tz) || [[tx, tz]]; e.pi = 0; }
+function place3(e) { e.grp.position.set(e.x, 0, e.z); e.grp.rotation.y = e.h; e.grp.visible = e.on; }
+const distP = e => Math.hypot(e.x - S.px, e.z - S.pz);
+function spawnAt(e, minD, maxD) { const p = placeAway(minD, maxD); if (!p) return false; e.x = p[0]; e.z = p[1]; e.on = true; e.state = 'wander'; e.path = []; e.pi = 0; e.t = 0; e.stunT = 0; return true; }
+function litLanternNear(x, z, r) { return lanterns.some(l => l.lit && Math.hypot(l.x - x, l.z - z) < r); }
+
+/* ---------- the Count ---------- */
+const count = { on: false, x: 0, z: 0, h: 0, seenT: 0, rush: 0, hideT: 0, scrapeT: 0, whisperT: 8, stunT: 0, wait: 25, grp: new THREE.Group() };
+{ const g = count.grp; bx(g, 0.7, 2.7, 0.4, 0, 1.55, 0); bx(g, 0.55, 0.55, 0.4, 0, 3.15, 0.05, M_PALE); bx(g, 0.08, 0.1, 0.05, -0.14, 3.2, 0.27, M_BLACK); bx(g, 0.08, 0.1, 0.05, 0.14, 3.2, 0.27, M_BLACK); bx(g, 0.12, 1.5, 0.12, -0.5, 1.7, 0.2); bx(g, 0.12, 1.5, 0.12, 0.5, 1.7, 0.2); bx(g, 0.07, 0.35, 0.07, 0.5, 0.95, 0.35, M_PALE); count.grp.visible = false; scene.add(g); }
+function inView(x, z) {
+  const dx = x - S.px, dz = z - S.pz, d = Math.hypot(dx, dz) || 1, fx_ = -Math.sin(S.yaw), fz_ = -Math.cos(S.yaw);
+  const half = Math.atan(Math.tan(camera.fov * Math.PI / 360) * camera.aspect) + 0.12;
+  return d < 80 && (fx_ * dx + fz_ * dz) / d > Math.cos(half) && los(x, z, S.px, S.pz);
+}
+function updateCount(dt) {
+  const c = count;
+  if (!c.on) { c.wait -= dt; if (c.wait <= 0 && S.memories >= 1 && spawnAt(c, 50, 80)) { c.wait = 0; c.seenT = 0; c.rush = 0; c.hideT = 0; grantDoc(11); say('The streetlamps seem to lean away from something.', 4500); } place3(c); return; }
+  const d = distP(c), seen = inView(c.x, c.z);
+  if (seen) { c.seenT += dt; if (c.seenT > 2) grantDoc(12); if (c.seenT > 5 && c.rush <= 0) { c.rush = 3.5; sfxSting(2); S.shake = Math.max(S.shake, 0.6); say('You stared too long. It is coming.', 3000); } }
+  else c.seenT = Math.max(0, c.seenT - dt * 0.5);
+  if (c.stunT > 0) c.stunT -= dt;
+  let spd = c.rush > 0 ? 9.5 : (seen ? 0 : 4.4 + 0.5 * S.memories);
+  if (c.rush > 0) c.rush -= dt;
+  if (c.stunT > 0) spd = 0;
+  if (spd > 0 && d > 0.01) {
+    const nx = c.x + (S.px - c.x) / d * spd * dt, nz = c.z + (S.pz - c.z) / d * spd * dt;
+    if (!litLanternNear(nx, nz, 9)) { c.x = nx; c.z = nz; }   // walls do not stop it; a counted light does
+    c.scrapeT -= dt; if (c.scrapeT <= 0 && d < 50 && !seen) { c.scrapeT = 0.55; const sp = spatial(c.x, c.z); burst(0.14, 0.12 * Math.max(0.15, sp.vol), 'lowpass', 300, 1, sp.pan); }
+  }
+  c.h = Math.atan2(S.px - c.x, S.pz - c.z);
+  c.whisperT -= dt; if (c.whisperT <= 0 && d < 30) { c.whisperT = 9 + Math.random() * 6; sfxWhisper(); }
+  if (S.hiding) { if (d < 3.2) { c.hideT += dt; S.fear = Math.max(S.fear, 0.8); if (c.hideT > 10) { catchPlayer(c, 'hide'); c.on = false; c.wait = 40; } } else c.hideT = 0; } else c.hideT = 0;
+  if (d < 1.4 && S.mode === 'play') { catchPlayer(c, 'count'); c.on = false; c.wait = 40; }
+  if (d < 28) S.fear = Math.max(S.fear, 0.25 + 0.4 * (1 - d / 28));
+  place3(c);
+}
+
+/* ---------- hounds: blind, they hear ---------- */
+const hounds = [], shades = [];
+function makeHound() {
+  const grp = new THREE.Group(), legs = [];
+  bx(grp, 0.46, 0.5, 1.2, 0, 0.78, 0); bx(grp, 0.28, 0.3, 0.45, 0, 0.95, 0.65); bx(grp, 0.3, 0.26, 0.5, 0, 0.9, 0.98); bx(grp, 0.06, 0.04, 0.03, -0.09, 0.97, 1.24, M_EYE); bx(grp, 0.06, 0.04, 0.03, 0.09, 0.97, 1.24, M_EYE);
+  [[-0.2, 0.5], [0.2, 0.5], [-0.2, -0.5], [0.2, -0.5]].forEach(p => legs.push(bx(grp, 0.1, 0.62, 0.1, p[0], 0.32, p[1])));
+  grp.visible = false; scene.add(grp);
+  return { kind: 'hound', on: false, x: 0, z: 0, h: 0, grp, legs, state: 'wander', path: [], pi: 0, t: 0, stunT: 0, nextT: 0, stepT: 0, listen: 0, tgt: null };
+}
+function makeShade() {
+  const grp = new THREE.Group(), mat = new THREE.MeshBasicMaterial({ color: 0x03060a, transparent: true, opacity: 0.94 });
+  const body = new THREE.Mesh(new THREE.ConeGeometry(0.6, 2.6, 8), mat); body.position.y = 1.3; grp.add(body); bx(grp, 0.06, 0.1, 0.05, -0.12, 2.2, 0.35, M_WHITE); bx(grp, 0.06, 0.1, 0.05, 0.12, 2.2, 0.35, M_WHITE);
+  grp.visible = false; scene.add(grp);
+  return { kind: 'shade', on: false, x: 0, z: 0, h: 0, grp, mat, state: 'wander', path: [], pi: 0, t: 0, stunT: 0, nextT: 0, fade: 1 };
+}
+for (let i = 0; i < 3; i++) { hounds.push(makeHound()); shades.push(makeShade()); }
+const allEnts = () => hounds.concat(shades).concat([count]);
+const _mn = makeNoise;
+makeNoise = function (x, z, r, kind, src) {
+  _mn(x, z, r, kind, src);
+  hounds.forEach(h => { if (!h.on || h.stunT > 0 || S.charm > 0 && kind === 'player') return; const d = Math.hypot(h.x - x, h.z - z); if (d < r * 1.7 && (kind === 'player' || kind === 'thrown')) { h.state = 'hunt'; h.tgt = [x, z]; h.t = kind === 'thrown' ? 6 : 8; h.nextT = 0; if (S.chapter === 1) grantDoc(13); } });
+};
+function updateHound(h, dt) {
+  if (!h.on) { h.nextT -= dt; if (S.chapter === 1 && h.nextT <= 0) { spawnAt(h, 45, 90); h.nextT = 6; } place3(h); return; }
+  const d = distP(h);
+  if (h.stunT > 0) { h.stunT -= dt; place3(h); return; }
+  if (h.state === 'hunt') {
+    // they only follow what they hear: running, walking upright, or a bottle
+    const loud = S.charm <= 0 && !S.hiding && ((S.sprint && d < 26) || (S.moving && !S.crouch && d < 13));
+    if (loud) { h.tgt = [S.px, S.pz]; h.t = 7; }
+    h.t -= dt; h.nextT -= dt;
+    if (h.nextT <= 0) { entPath(h, h.tgt[0], h.tgt[1]); h.nextT = 0.5; }
+    const done = walk(h, dt, 7.4 + DIFF.detect);
+    if (d < 1.2 && S.mode === 'play' && !S.hiding) { catchPlayer(h, 'chase'); h.on = false; h.nextT = 30; place3(h); return; }
+    if (done || h.t <= 0) { h.state = 'wander'; h.path = []; h.nextT = 0; h.t = 2.5; }   // sniff, then drift
+    h.stepT -= dt; if (h.stepT <= 0 && d < 40) { h.stepT = 0.2; const sp = spatial(h.x, h.z); tone(60, 0.08, 'sine', 0.2 * sp.vol, 0, 40, sp.pan); }
+    S.fear = Math.max(S.fear, d < 22 ? 0.55 : 0);
+  } else {
+    h.t -= dt;
+    if (h.t <= 0 && (!h.path.length || h.pi >= h.path.length)) { const t = randomOpenNear(h.x, h.z, 24); entPath(h, t[0], t[1]); h.t = 2 + Math.random() * 3; }
+    walk(h, dt, 2.4);
+    if (d > 150) h.on = false;
+  }
+  h.legs.forEach((l, i) => { l.rotation.x = Math.sin(S.t * (h.state === 'hunt' ? 18 : 6) + i * 1.6) * 0.5; });
+  place3(h);
+}
+
+/* ---------- shades: they hate light ---------- */
+function updateShade(s, dt) {
+  if (!s.on) { s.nextT -= dt; if (S.chapter === 1 && S.memories >= 1 && s.nextT <= 0) { spawnAt(s, 40, 80); s.nextT = 8; s.fade = 0; } s.mat.opacity = 0; place3(s); return; }
+  const d = distP(s);
+  if (s.stunT > 0) { s.stunT -= dt; place3(s); return; }
+  const flashOn = S.flash && S.battery > 0, fx_ = -Math.sin(S.yaw), fz_ = -Math.cos(S.yaw), dot = d > 0 ? (fx_ * (s.x - S.px) + fz_ * (s.z - S.pz)) / d : 1;
+  const beam = flashOn && d < 22 && dot > 0.88;
+  const lit = S.light > 0.3 || beam || litLanternNear(s.x, s.z, 11);
+  const dark = !flashOn && S.light < 0.26 && S.charm <= 0 && !S.hiding;
+  if (lit && d < 26) {   // recoil
+    s.state = 'flee'; s.fade = Math.max(0.15, s.fade - dt * 2.5);
+    const nx = s.x + (s.x - S.px) / (d || 1) * 6.2 * dt, nz = s.z + (s.z - S.pz) / (d || 1) * 6.2 * dt; if (!aiClosed(cellOf(nx), cellOf(nz))) { s.x = nx; s.z = nz; }
+    if (beam) grantDoc(14);
+  } else if (dark && d < 45) {
+    s.state = 'hunt'; s.fade = Math.min(1, s.fade + dt * 1.2); s.nextT -= dt;
+    if (s.nextT <= 0) { entPath(s, S.px, S.pz); s.nextT = 0.7; }
+    walk(s, dt, d < 10 ? 6.6 : 5);
+    S.fear = Math.max(S.fear, d < 20 ? 0.5 : 0.2);
+    if (d < 1.1 && S.mode === 'play') { catchPlayer(s, 'chase'); s.on = false; s.nextT = 30; place3(s); return; }
+  } else {
+    s.state = 'wander'; s.fade = Math.min(0.5, s.fade + dt * 0.5); s.t -= dt; s.nextT -= dt;
+    if (s.t <= 0 && (!s.path.length || s.pi >= s.path.length)) { const t = randomOpenNear(s.x, s.z, 22); entPath(s, t[0], t[1]); s.t = 3 + Math.random() * 3; }
+    walk(s, dt, 2.2); if (d > 160) s.on = false;
+  }
+  s.mat.opacity = s.fade * 0.94; s.h = Math.atan2(S.px - s.x, S.pz - s.z); place3(s);
+}
+
+/* ---------- per-frame, reset ---------- */
+function updateMerge(dt) {
+  hudWallet();
+  if (S.charm > 0) S.charm = Math.max(0, S.charm - dt);
+  if (S.chapter !== 1 || S.finale) { allEnts().forEach(e => { e.on = false; place3(e); }); return; }
+  if (S.counted) { count.on = false; place3(count); } else updateCount(dt); hounds.forEach(h => updateHound(h, dt)); shades.forEach(s => updateShade(s, dt));
+  if (S.hiding) grantDoc(16);
+  if (S.memories >= 3) grantDoc(15);
+  if (S.memories >= 1) grantDoc(17);
+  if (S.memories >= 2) grantDoc(18);
+}
+function mergeReset(full) {
+  allEnts().forEach(e => { e.on = false; e.state = 'wander'; e.path = []; e.stunT = 0; });
+  count.wait = 25; count.seenT = 0; count.rush = 0; count.hideT = 0; hounds.concat(shades).forEach(e => { e.nextT = 8 + Math.random() * 10; });
+  if (full) { applyClass('wanderer'); S.coins = 0; S.bottles = 0; }
+}
+/* ================= merged from Big Randy 1: townsfolk, slide, map + fast travel, saves, graphics ================= */
+/* ---------- townsfolk (echoes that keep a lantern) ---------- */
+const NPCDEF = [
+  ['the loading dock', 'Peddler Wick', ['Wrong coat. Everyone who comes through here is looking for her.', 'I keep a few things for whoever walks out of that building. Smoke, a whistle, a battery. Take what helps.'], ['Smoke bomb', 'Whistle', 'Battery', 'Two bottles']],
+  ['the church', 'Old Nettie', ['Do not stare at it. Never stare. It only moves when you look away, so look away less than you want to.', 'A lit lantern is a counted house. It will not cross that light. Stay near them.'], ['Ward charm', 'Tonic']],
+  ['the diner', 'Hunter Brock', ['The dogs are blind. They hear. Crouch when they pass, and throw a bottle down the road.', 'And the shades hate light. Your torch keeps them off you, but it calls the wardens. Pick.'], ['Smoke bomb', 'Whistle', 'Two bottles', 'Swift boots']],
+  ['the clinic', 'Nurse Calloway', ['Light is a cure and a lure. I have sat with every child who would not sleep on this ward.', 'Take a tonic. You look like someone who has been running a long time.'], ['Tonic', 'Battery', 'Ward charm']]
+];
+const npcs = [];
+NPCDEF.forEach(d => {
+  const l = lanterns.find(q => q.name === d[0]); if (!l) return;
+  const grp = new THREE.Group(), body = new THREE.Mesh(new THREE.ConeGeometry(0.5, 1.7, 8), new THREE.MeshLambertMaterial({ color: 0x2a2d33 })), head = new THREE.Mesh(new THREE.SphereGeometry(0.2, 8, 6), new THREE.MeshBasicMaterial({ color: 0xb9b8a8 }));
+  body.position.y = 0.85; head.position.y = 1.85; grp.add(body, head);
+  const gl = glowSprite(0xffc46b, 3, 0.25); gl.position.y = 1.2; grp.add(gl);
+  let x = l.x + 2.2, z = l.z; if (blocked(x, z, 0.6)) { x = l.x - 2.2; if (blocked(x, z, 0.6)) { x = l.x; z = l.z + 2.2; } }
+  grp.position.set(x, 0, z); scene.add(grp);
+  npcs.push({ name: d[1], lines: d[2], stock: d[3], x, z, grp, at: d[0], talked: 0 });
+});
+function talkTo(n) {
+  S.mode = 'card'; const line = n.lines[Math.min(n.talked, n.lines.length - 1)]; n.talked++;
+  menuCard('An echo at ' + n.at, n.name, c => { c.append(el('p', 'copy', '“' + line + '”')); }, [
+    { label: 'Trade', onClick: () => openShop({ name: n.name }, n.stock, 'What they can spare') },
+    { label: 'Another word', onClick: () => talkTo(n) },
+    { label: 'Leave', quiet: true, onClick: resumeFromMenu }]);
+}
+
+/* ---------- slide: dodges and stuns on contact ---------- */
+ACTIONS.push(['slide', 'Slide (stuns on contact)', 'KeyQ'], ['map', 'World map', 'KeyM']);
+DEFBIND.slide = 'KeyQ'; DEFBIND.map = 'KeyM'; ['slide', 'map'].forEach(k => { if (!BIND[k]) BIND[k] = DEFBIND[k]; DEFCODES.add(DEFBIND[k]); });
+S.slideT = 0; S.slideCD = 0; S.slideDir = [0, 0];
+ITEMACT.slide = () => {
+  if (S.hiding || S.slideT > 0 || S.slideCD > 0 || S.stamina < 20) return say(S.slideCD > 0 ? 'Not yet.' : 'Too winded to slide.', 1200);
+  S.slideT = 0.55; S.slideCD = 5; S.stamina -= 20; S.slideDir = [-Math.sin(S.yaw), -Math.cos(S.yaw)]; S.crouch = true; makeNoise(S.px, S.pz, 10, 'player'); burst(0.4, 0.12, 'lowpass', 500, 1);
+};
+ITEMACT.map = () => openMap();
+const _mp = movePlayer;
+movePlayer = function (dt) {
+  S.slideCD = Math.max(0, S.slideCD - dt);
+  if (S.slideT <= 0) return _mp(dt);
+  S.slideT -= dt; S.moving = true; S.sprint = false;
+  const st = 11 * dt; let nx = S.px + S.slideDir[0] * st, nz = S.pz + S.slideDir[1] * st;
+  if (!blocked(nx, S.pz, 0.45)) S.px = nx; else S.slideT = 0;
+  if (!blocked(S.px, nz, 0.45)) S.pz = nz; else S.slideT = 0;
+  const hit = nearbyEntity(1.7);
+  if (hit) { hit.stunT = 5; S.slideT = 0; say('You slam into it. It staggers.', 2000); sfxShatter(S.px, S.pz); S.shake = Math.max(S.shake, 0.5); }
+  if (S.slideT <= 0) S.crouch = false;
+};
+
+/* ---------- map and fast travel ---------- */
+const MAPCOL = { '#': '#3a3f44', B: '#4a3a30', T: '#16251a', h: '#1d3a22', D: '#7a6a3a', w: '#12384a', '.': '#22262b', ',': '#2b2a26' };
+function openMap() {
+  if (S.mode !== 'play') return; S.mode = 'card';
+  const town = S.chapter === 1;
+  menuCard('Meridian', 'The map', c => {
+    const cv = document.createElement('canvas'); cv.width = MW * 3; cv.height = MH * 3; cv.style.cssText = 'width:100%;max-width:440px;border:1px solid var(--edge);image-rendering:pixelated;background:#050607';
+    const g = cv.getContext('2d');
+    for (let j = 0; j < MH; j++) for (let i = 0; i < MW; i++) { g.fillStyle = MAPCOL[grid[j][i]] || '#111'; g.fillRect(i * 3, j * 3, 3, 3); }
+    lanterns.forEach(l => { g.fillStyle = l.lit ? '#ffc46b' : '#555'; g.beginPath(); g.arc(cellOf(l.x) * 3 + 1.5, cellOf(l.z) * 3 + 1.5, l.lit ? 5 : 3, 0, 7); g.fill(); });
+    g.fillStyle = '#c58bff'; g.beginPath(); g.arc(cellOf(TOWER.x) * 3 + 1.5, cellOf(TOWER.z) * 3 + 1.5, 4, 0, 7); g.fill();
+    g.fillStyle = '#ff4a3a'; g.fillRect(cellOf(S.px) * 3 - 2, cellOf(S.pz) * 3 - 2, 6, 6);
+    c.append(cv);
+    c.append(el('p', 'copy dim', 'Red: you. Gold: lit lanterns. Violet: the tower. Flames: ' + S.flames.size + ' of 5. Blue is the creek, crossed only at the bridges.'));
+    if (!town) c.append(el('p', 'copy dim', 'Fast travel opens once you are out of the Institute.'));
+    else {
+      const chased = guards.some(g => g.active && g.state === 'chase') || hounds.concat(shades).some(e => e.on && e.state === 'hunt');
+      const w = el('div', 'menulist');
+      lanterns.filter(l => l.lit).forEach(l => { const b = el('button', 'btn', 'Travel to ' + l.name); b.type = 'button'; b.disabled = chased; b.addEventListener('click', () => travelTo(l)); w.append(b); });
+      if (!w.children.length) w.append(el('p', 'copy dim', 'No lit lanterns yet. Light one by walking up to it.'));
+      if (chased) w.append(el('p', 'copy dim', 'You cannot slip away while something is hunting you.'));
+      c.append(w);
+    }
+  }, [{ label: 'Close', onClick: resumeFromMenu }]);
+}
+function travelTo(l) {
+  hideCard(); let cx = l.x + 1.4, cz = l.z; if (blocked(cx, cz, 0.45)) { cx = l.x - 1.4; if (blocked(cx, cz, 0.45)) { cx = l.x; cz = l.z + 1.4; } }
+  S.px = cx; S.pz = cz; S.ck = { x: cx, z: cz, yaw: S.yaw, lantern: l }; mergeReset(false); S.mode = 'play'; relock(); say('The lantern at ' + l.name + ' takes you in.', 3000); sfxDoor();
+}
+$('caseBtn').insertAdjacentHTML('afterend', '<button class="mini" id="mapBtn" type="button">Map</button>'); $('mapBtn').addEventListener('click', openMap);
+
+/* ---------- saves ---------- */
+function saveGame(quiet) {
+  if (S.chapter < 0) return false;
+  const d = { v: 2, part: PART, ch: S.chapter, mem: S.memories, read: [...S.read], coins: S.coins, smoke: S.smoke, whistle: S.whistle, charms: S.charms, bottles: S.bottles, battery: S.battery, cls: S.cls, deaths: S.deaths, flames: [...S.flames], counted: S.counted,
+    lit: lanterns.filter(l => l.lit).map(l => l.name), taken: pickups.map(p => p.taken ? 1 : 0).join(''), x: S.ck.x, z: S.ck.z, yaw: S.ck.yaw, tut: S.tutorialChase | 0, tall: S.tallOn, sealed: !!IDOORS.sealed.open, gate: !!IDOORS.gate.open, speedMul: S.speedMul, battMul: S.battMul };
+  try { localStorage.setItem('hf1-save-' + SLOT, JSON.stringify(d)); setMeta(SLOT, { part: PART }); if (!quiet) say('Saved at your last safe spot.', 2500); return true; } catch (e) { if (!quiet) say('This browser would not let me save.', 3000); return false; }
+}
+function readSave(n) { try { return JSON.parse(localStorage.getItem('hf1-save-' + (n || SLOT)) || 'null'); } catch (e) { return null; } }
+function getMeta(n) { try { return JSON.parse(localStorage.getItem('hf1-meta-' + n) || 'null'); } catch (e) { return null; } }
+function setMeta(n, m) { try { localStorage.setItem('hf1-meta-' + n, JSON.stringify(m)); } catch (e) {} }
+function loadGame() {
+  const d = readSave(); if (!d) return;
+  PART = d.part || 1; resetAll(); hideCard();
+  S.chapter = d.ch; S.memories = d.mem; S.read = new Set(d.read); S.coins = d.coins; S.smoke = d.smoke; S.whistle = d.whistle; S.charms = d.charms; S.bottles = d.bottles; S.battery = d.battery; S.cls = d.cls; S.deaths = d.deaths; S.flames = new Set(d.flames); S.counted = d.counted; S.speedMul = d.speedMul; S.battMul = d.battMul; S.tallOn = d.tall; S.tutorialChase = d.tut;
+  lanterns.forEach(l => { if (d.lit.indexOf(l.name) >= 0) { l.lit = true; l.src.int = 1.2; l.src.r = 12; } });
+  pickups.forEach((p, i) => { if (d.taken[i] === '1') { p.taken = true; p.mesh.visible = false; p.glow.visible = false; } });
+  clues.forEach((c, i) => { if (S.read.has(c.id)) { const o = clueObjs[i]; o.beam.visible = false; o.glow.material.opacity = 0.12; o.paper.material.color.set(0x7a7766); } });
+  if (d.sealed) { IDOORS.sealed.open = true; IDOORS.sealed.locked = false; IDOORS.sealed.anim = 1; }
+  if (d.gate) { IDOORS.gate.open = true; IDOORS.gate.locked = false; IDOORS.gate.anim = 1; towerBeam.visible = true; }
+  if (S.chapter === 1) { IDOORS.dock.locked = false; DIFF.detect = SET.diff * 1.25; DIFF.chase = 5.9; guards.forEach(g => { if (g.zone === 'inst') setActive(g, false); else if (g.zone === 'town' && !g.ambush && g !== tallOne) { resetGuard(g); setActive(g, true); } }); }
+  S.px = d.x; S.pz = d.z; S.yaw = d.yaw; S.ck = { x: d.x, z: d.z, yaw: d.yaw };
+  initAudio(); applySettings(); mergeReset(false); S.mode = 'play'; S.t = 0; relock(); refreshProgress(); banner('Meridian', 'Back where you were.', 3500);
+}
+{ const old = leaveInstitute; leaveInstitute = function () { old(); saveGame(true); }; }
+{ const oldAD = afterDoc; afterDoc = function (id) { oldAD(id); saveGame(true); }; }
+{ const oldP = pause; pause = function () { oldP(); if (S.mode === 'card') { const w = $('card').querySelector('.menulist'); if (w) { const b = el('button', 'btn', 'Save game'); b.type = 'button'; b.addEventListener('click', () => { saveGame(false); }); w.insertBefore(b, w.children[2] || null); } } }; }
+
+/* ---------- graphics ---------- */
+DEFSET.gfx = 1; if (SET.gfx === undefined) SET.gfx = 1;
+function applyGfx() { const dpr = window.devicePixelRatio || 1, v = [0.6, Math.min(dpr, 1), Math.min(dpr, 1.5)][SET.gfx] || 1; renderer.setPixelRatio(v); camera.far = [130, 190, 240][SET.gfx] || 190; camera.updateProjectionMatrix(); resize(); }
+{ const oldA = applySettings; applySettings = function () { oldA(); applyGfx(); }; }
+{ const oldS = settingsCard; settingsCard = function (back) { oldS(back); const box = $('card').querySelector('.mscroll'); if (!box) return; const r = el('div', 'mrow'), l = el('label', null, 'Graphics'), s = el('select'); ['Low', 'Medium', 'High'].forEach((n, i) => { const o = el('option', null, n); o.value = i; if (SET.gfx === i) o.selected = true; s.append(o); }); s.addEventListener('change', () => { SET.gfx = +s.value; applySettings(); }); r.append(l, s); box.append(r); }; }
+applyGfx();
+/* ================= jump, day and night, bloom (High graphics) ================= */
+ITEMACT.breath = () => {
+  if (S.hiding || S.jy > 0.01 || S.stamina < 10) return;
+  S.jv = 6.4; S.stamina -= 8; makeNoise(S.px, S.pz, 6, 'player'); burst(0.08, 0.05, 'lowpass', 300, 1);
+};
+const DAWN_AT = 540;
+const FOG_DARK = new THREE.Color(0x04070a), FOG_DAWN = new THREE.Color(0x2a3a4e), FOG_DUSK = new THREE.Color(0x1d1a26), _fc = new THREE.Color();
+let dawnT = 0;
+function updateExtras(dt) {
+  // jump
+  if (S.jy > 0 || S.jv > 0) {
+    S.jv -= 17 * dt; S.jy += S.jv * dt;
+    if (S.jy <= 0) { S.jy = 0; S.jv = 0; if (blocked(S.px, S.pz, 0.45)) { const o = openSpot(S.px, S.pz); S.px = o[0]; S.pz = o[1]; } makeNoise(S.px, S.pz, 5, 'player'); burst(0.07, 0.06, 'lowpass', 350, 1); }
+  }
+  JUMPY = S.hiding ? 0 : S.jy;
+  // the night: 21:00 to 06:00, one game minute per two seconds
+  if (S.chapter === 1 && !S.finale) {
+    if (dawnT > 0) {
+      dawnT -= dt;
+      if (dawnT <= 0) { S.night++; S.clock = 0; guards.forEach(g => { if (g.zone === 'town' && !g.ambush && g !== tallOne) { resetGuard(g); setActive(g, true); } }); banner('Night ' + S.night, 'It begins again. They are still looking.', 4500); }
+    } else {
+      S.clock += dt / 2;
+      if (S.clock >= DAWN_AT) { dawnT = 45; guards.forEach(g => setActive(g, false)); mergeReset(false); S.clock = DAWN_AT; banner('Dawn', 'The search goes quiet for a little while.', 5000); sfxEnd(); }
+    }
+  }
+  // light and colour by the hour
+  const t = S.clock, dusk = t < 90 ? 1 - t / 90 : 0, dawn = t > 400 ? Math.min(1, (t - 400) / 140) : 0, k = Math.max(dusk * 0.6, dawn);
+  S.dayL = S.chapter === 1 ? k * 0.22 : 0;
+  ambientL.intensity = 0.95 + k * 0.9;
+  _fc.copy(FOG_DARK).lerp(dusk > dawn ? FOG_DUSK : FOG_DAWN, Math.max(dusk, dawn) * 0.9);
+  scene.fog.color.copy(_fc); scene.background.copy(_fc); renderer.setClearColor(_fc);
+}
+const clockStr = () => { const m = Math.floor(21 * 60 + S.clock) % 1440; return String(Math.floor(m / 60)).padStart(2, '0') + ':' + String(m % 60).padStart(2, '0'); };
+{ const oldHW = hudWallet; hudWallet = function () { oldHW(); if (S.chapter === 1) walletEl.textContent += ' · ' + clockStr() + (dawnT > 0 ? ' dawn' : ''); }; }
+{ const oldM = updateMerge; updateMerge = function (dt) { if (dawnT > 0) { allEnts().forEach(e => { e.on = false; place3(e); }); hudWallet(); return; } oldM(dt); }; }
+{ const oldR = resetAll; resetAll = function () { oldR(); S.night = 1; S.clock = 0; dawnT = 0; S.jy = 0; S.jv = 0; }; }
+{ const oldRs = respawn; respawn = function () { oldRs(); S.jy = 0; S.jv = 0; if (dawnT > 0) dawnT = 0; }; }
+
+/* ---------- bloom, High graphics only (falls back silently if the add-ons did not load) ---------- */
+let post = null;
+function buildPost() {
+  try {
+    if (!(THREE.EffectComposer && THREE.RenderPass && THREE.UnrealBloomPass)) return null;
+    const w = stage.clientWidth, h = stage.clientHeight, c = new THREE.EffectComposer(renderer);
+    c.addPass(new THREE.RenderPass(scene, camera));
+    c.addPass(new THREE.UnrealBloomPass(new THREE.Vector2(w, h), 0.45, 0.6, 0.82));
+    c.setSize(w, h); return c;
+  } catch (e) { return null; }
+}
+function renderFrame() {
+  if (SET.gfx === 2) { if (post === null) post = buildPost() || false; if (post) { try { post.render(); return; } catch (e) { post = false; } } }
+  renderer.render(scene, camera);
+}
+addEventListener('resize', () => { if (post) post.setSize(stage.clientWidth, stage.clientHeight); });
+
+/* ---------- Part I ends at the breach. Part II is the search and the way home. ---------- */
+const HOME = { x: (OX + 24.5) * CS, z: (OY + 30.5) * CS };
+let startPart2 = null;
+
+{
+  // the stillness no longer ends in her face: it ends in a seam in the air, and a way through
+  const _fd1 = finaleDone;
+  finaleDone = function () {
+    if (PART !== 1) return _fd1();
+    S.finale = 3; S.mode = 'finale'; sfxEnd();
+    showCard({ cls: 'scene', eyebrow: 'The tower', lines: [
+      { t: 'It is as tall as the tower’s shadow and as thin as a held breath, and you know it before you can name it. It is the fear she left in the dark, grown tall on every night nobody stood still for.', cls: 'mood' },
+      { t: 'You do not run. You do the one thing it cannot follow. You stay.', cls: 'mood' },
+      { t: 'It leans down to where your face is, and then past it, and then it simply stops being in the way.', cls: 'mood' }],
+      buttons: [{ label: 'Look where it was', onClick: seam }] });
+  };
+  function seam() {
+    showCard({ cls: 'scene', eyebrow: 'The seam', lines: [
+      { t: 'Where it stood, the air has a seam in it, a straight bright line from the ground to the top of the tower’s beam. It is not a door. It is the place where one direction ends and another has always been waiting.', cls: 'mood' },
+      { t: 'You have read enough to understand it. The fourth dimension is not somewhere she went. It is a direction nobody is taught to walk, and you turn toward it the way you turn toward a sound you are afraid of: slowly, without moving your feet.' },
+      ...(S.counted ? [{ t: 'All five flames came with you, so the Count held the seam open with both hands, and bowed.', cls: 'mood' }] : []),
+      { t: 'On the other side, very far off, a lantern is swinging. Somebody small is holding it.', cls: 'mood' }],
+      buttons: [{ label: 'Put your hand to the seam', onClick: partOneEnd }] });
+  }
+  function partOneEnd() {
+    showCard({ cls: 'scene', eyebrow: 'The Beyond Files 1', title: 'You break through.', lines: [
+      { t: 'The seam opens like a held breath let go. Reality is not a wall. It was only ever a habit.' },
+      { t: 'End of Chapter 1. You found the way through.', cls: 'mood' },
+      { t: 'Chapter 2: find her, and bring her home.', cls: 'mood' }],
+      buttons: [{ label: 'Chapter 2', onClick: toChapter2 }, { label: 'Back to the title', quiet: true, onClick: () => { setMeta(SLOT, { part: 2 }); try { localStorage.removeItem('hf1-save-' + SLOT); } catch (e) {} resetAll(); } }] });
+    setMeta(SLOT, { part: 2 }); try { localStorage.removeItem('hf1-save-' + SLOT); } catch (e) {}
+  }
+  function toChapter2() { PART = 2; resetAll(); classCard(startPart2); }
+}
+
+
+{
+  const M_COAT = new THREE.MeshLambertMaterial({ color: 0x7f858d, emissive: 0x15181c }), M_SKIN = new THREE.MeshLambertMaterial({ color: 0xd9c3ad, emissive: 0x1d1814 }), M_LAMP = new THREE.MeshBasicMaterial({ color: 0xffe2a0 });
+  const girl = { on: false, x: 0, z: 0, h: 0, path: [], pi: 0, nextT: 0, callT: 0, legs: [], grp: new THREE.Group() };
+  { const g = girl.grp; bx(g, 0.46, 0.85, 0.3, 0, 0.78, 0, M_COAT); bx(g, 0.3, 0.3, 0.3, 0, 1.38, 0, M_SKIN); bx(g, 0.08, 0.06, 0.03, -0.07, 1.4, 0.16, M_BLACK); bx(g, 0.08, 0.06, 0.03, 0.07, 1.4, 0.16, M_BLACK);
+    girl.legs.push(bx(g, 0.13, 0.4, 0.13, -0.1, 0.2, 0, M_COAT), bx(g, 0.13, 0.4, 0.13, 0.1, 0.2, 0, M_COAT));
+    bx(g, 0.11, 0.15, 0.11, 0.34, 0.72, 0.14, M_LAMP); const gl = glowSprite(0xffd9a0, 2.2, 0.8); gl.position.set(0.34, 0.76, 0.14); g.add(gl);
+    g.visible = false; scene.add(g); }
+  S.found = false; S.escort = 0;
+
+  const _sg2 = startGame;
+  startGame = function () { if (PART !== 2) return _sg2(); hideCard(); initAudio(); applySettings(); S.mode = 'play'; S.t = 0; relock(); refreshProgress(); };
+  startPart2 = function () {
+    skipTutorial();
+    banner('The other side', 'Find where she was seen.', 5500);
+    setTimeout(() => say('This is Meridian as she remembers it. Somewhere in it, she is holding a lantern.', 6500), 2600);
+  };
+  const _li2 = leaveInstitute;
+  leaveInstitute = function () { _li2(); if (PART !== 2) return; banner('The other side', 'Find where she was seen.', 5500); setTimeout(() => say('This is Meridian as she remembers it. Somewhere in it, she is holding a lantern.', 6500), 2600); };
+
+  const _rp2 = refreshProgress;
+  refreshProgress = function () {
+    _rp2();
+    if (PART !== 2 || S.chapter !== 1) return;
+    const o = $('objective');
+    if (S.escort) o.textContent = 'Bring her home: lead her back to the loading dock at the Institute (south-west). Keep her close. If they reach her, they reach you.';
+    else if (S.memories >= 3 && !S.finale) o.textContent = 'Something tall stands under the water tower. Go in. Do not run. She is there.';
+  };
+
+  // she appears: the stillness reveals her, as before. After that, the road home begins.
+  const _f3 = finale3;
+  finale3 = function () {
+    if (PART !== 2) return _f3();
+    showCard({ cls: 'scene', eyebrow: 'Found', lines: [
+      { t: 'She takes your hand without asking, the way a child takes a handrail. Her lantern is almost out.' },
+      { t: '“Which way is home?”', cls: 'her' },
+      { t: 'South-west. The loading dock, the long wall, the door with the light still on. The searchers are walking again, and now there are two of you to be seen.', cls: 'mood' },
+      { t: '“I’ll keep up,” she says. “I always do.”', cls: 'her' }],
+      buttons: [{ label: 'Lead her home', onClick: startEscort }] });
+  };
+  function startEscort() {
+    S.found = true; S.escort = 1; S.finale = 0; S.mode = 'play'; relock();
+    S.ck = { x: S.px, z: S.pz, yaw: S.yaw };
+    girl.x = S.px + 1.8; girl.z = S.pz + 1.8; { const c = nearestCell(cellOf(girl.x), cellOf(girl.z)); girl.x = wc(c[0]); girl.z = wc(c[1]); }
+    girl.on = true; girl.path = []; girl.pi = 0; girl.nextT = 0; girl.callT = S.t;
+    resetGuard(tallOne); setActive(tallOne, false);
+    guards.forEach(g => { if (g.zone === 'town' && !g.ambush && g !== tallOne) { resetGuard(g); setActive(g, true); } });
+    dirT = 20;
+    banner('Bring her home', 'If they reach her, they reach you.', 5500);
+    setTimeout(() => say('Keep her close. She is slower than you, and she is not afraid of the dark. She is afraid of being left in it.', 7000), 2200);
+    refreshProgress();
+  }
+  function arriveHome() {
+    S.escort = 0; S.mode = 'finale'; girl.on = false; place3(girl); sfxEnd();
+    showCard({ cls: 'scene', eyebrow: 'Hall Four', lines: [
+      { t: 'The loading dock is exactly as you left it, except that the door at the end of the hall has its light on.' },
+      { t: 'She stops at the threshold. “It’s smaller than I remembered.” “It always is.”', cls: 'mood' },
+      { t: 'Past the door, on the near side of the long wall, two people who have been waiting a very long time turn at the sound of her name.', cls: 'mood' },
+      ...(S.counted ? [{ t: 'The Count walked you to the dock, and bowed, and did not come inside.', cls: 'mood' }] : []),
+      { t: 'The rumor said a girl slipped into the fourth dimension. She did not slip, and she was not taken. She was waiting for somebody to come and walk her out. That was all anyone ever had to do.' }],
+      buttons: [{ label: 'Walk her through', onClick: partTwoEnd }] });
+  }
+  function partTwoEnd() {
+    showCard({ cls: 'scene', eyebrow: 'The Beyond Files 1', title: 'She is home.', lines: [
+      { t: 'End of Chapter 2. End of The Beyond Files 1.', cls: 'mood' }, { t: 'Behind you, a small light has come on.' }],
+      buttons: [{ label: 'Back to the title', onClick: () => { setMeta(SLOT, { part: 2, done: 1 }); try { localStorage.removeItem('hf1-save-' + SLOT); } catch (e) {} PART = 1; resetAll(); } }] });
+  }
+  function updateGirl(dt) {
+    if (!girl.on || S.mode !== 'play') { place3(girl); return; }
+    const d = Math.hypot(girl.x - S.px, girl.z - S.pz);
+    girl.nextT -= dt;
+    if (d > 3.4) { if (girl.nextT <= 0) { entPath(girl, S.px, S.pz); girl.nextT = 0.6; } walk(girl, dt, Math.min(6.4, 2.2 + d * 0.7)); }
+    else girl.h = Math.atan2(S.px - girl.x, S.pz - girl.z);
+    if (d > 70) { const c = nearestCell(cellOf(S.px - Math.sin(S.yaw) * -3), cellOf(S.pz - Math.cos(S.yaw) * -3)); girl.x = wc(c[0]); girl.z = wc(c[1]); girl.path = []; girl.pi = 0; }
+    if (d > 22 && S.t - girl.callT > 9) { girl.callT = S.t; say('“Wait for me!”', 2200); }
+    girl.legs.forEach((l, i) => { l.rotation.x = d > 3.4 ? Math.sin(S.t * 10 + i * Math.PI) * 0.6 : 0; });
+    // anything hunting that reaches her reaches you
+    const threats = guards.filter(q => q.active && q.state === 'chase').concat(hounds.filter(h => h.on && h.state === 'hunt'), shades.filter(s => s.on && s.state === 'hunt'), count.on ? [count] : []);
+    for (const t of threats) if (Math.hypot(t.x - girl.x, t.z - girl.z) < 1.9) { say('They have her. They have you.', 2500); catchPlayer(t, 'chase'); break; }
+    if (S.mode === 'play' && Math.hypot(S.px - HOME.x, S.pz - HOME.z) < 7 && d < 9) arriveHome();
+    place3(girl);
+  }
+  const _um2 = updateMerge;
+  updateMerge = function (dt) { _um2(dt); if (S.escort) updateGirl(dt); };
+  const _rs2 = respawn;
+  respawn = function () { _rs2(); if (S.escort) { const c = nearestCell(cellOf(S.px + 1.5), cellOf(S.pz + 1.5)); girl.x = wc(c[0]); girl.z = wc(c[1]); girl.path = []; girl.pi = 0; girl.on = true; place3(girl); } };
+  const _ra2 = resetAll;
+  resetAll = function () { S.found = false; S.escort = 0; girl.on = false; place3(girl); _ra2(); };
+}
+
+/* ---------- title screen with three save slots ---------- */
+function slotInfo(n) {
+  const sv = readSave(n), m = getMeta(n);
+  if (m && m.done) return 'Complete';
+  if (sv) return 'Chapter ' + (sv.part || 1) + (sv.ch ? ', the town, ' + sv.mem + ' of 3 places' : ', the Institute');
+  if (m && m.part === 2) return 'Chapter 2, not started';
+  return 'Empty';
+}
+function introMain() {
+  S.mode = 'menu'; refreshProgress();
+  menuCard('The Beyond Files 1', 'The Girl in the 4th Dimension', c => {
+    c.append(el('p', 'copy', 'They say a girl named Lyra, called Odile in the Institute’s records, slipped into the fourth dimension, and that the building still remembers. Chapter 1: find out how to break through reality. Chapter 2: find her, and bring her home.'));
+    c.append(menuButtons([1, 2, 3].map(n => ['Save ' + n + ': ' + slotInfo(n), () => slotCard(n)]).concat([['How to play', () => howTo(introCard)], ['Controls', () => controlsCard(introCard)], ['Settings', () => settingsCard(introCard)]])));
+  }, []);
+}
+const CODES = { SEAM: 2 };
+function beginChapter(ch, tut) {
+  PART = ch; resetAll();
+  if (ch === 2) classCard(startPart2); else classCard(tut ? startGame : skipTutorial);
+}
+function slotCard(n) {
+  SLOT = n; const sv = readSave(n), m = getMeta(n);
+  menuCard('Save ' + n, slotInfo(n), c => {
+    const items = [];
+    if (sv) items.push(['Continue', loadGame]);
+    else if (m && m.part === 2 && !m.done) items.push(['Begin Chapter 2', () => beginChapter(2)]);
+    if (!sv && !(m && m.part === 2 && !m.done)) { items.push(['New game: the Institute (short tutorial)', () => beginChapter(1, true)]); items.push(['New game: skip tutorial', () => beginChapter(1, false)]); }
+    else items.push(['Start over from Chapter 1', () => beginChapter(1, true)]);
+    c.append(menuButtons(items));
+    const row = el('div', 'copy dim', 'Have a code? '); const inp = el('input'); inp.type = 'text'; inp.maxLength = 12; inp.placeholder = 'code'; inp.style.cssText = 'font:inherit;padding:8px 10px;width:9em;margin:0 8px;background:transparent;color:inherit;border:1px solid currentColor';
+    const go = el('button', 'btn quiet', 'Use'); go.type = 'button'; go.addEventListener('click', () => { const ch = CODES[inp.value.trim().toUpperCase()]; if (ch) { try { localStorage.removeItem('hf1-save-' + n); } catch (e) {} setMeta(n, { part: ch }); beginChapter(ch); } else say('That code does nothing.', 2200); });
+    inp.addEventListener('keydown', e => { e.stopPropagation(); if (e.key === 'Enter') go.click(); });
+    row.append(inp, go); c.append(row);
+    if (sv || m) { const d = el('button', 'btn quiet', 'Erase this save'); d.type = 'button'; d.addEventListener('click', () => { if (confirmAgain('Erase save ' + n + '?')) { try { localStorage.removeItem('hf1-save-' + n); localStorage.removeItem('hf1-meta-' + n); } catch (e) {} slotCard(n); } }); c.append(d); }
+  }, [{ label: 'Back', quiet: true, onClick: introCard }]);
+}
+})();</script>
+
+</body></html>
